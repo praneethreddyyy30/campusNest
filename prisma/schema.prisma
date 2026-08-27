@@ -1,0 +1,119 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String    @id @default(uuid())
+  name         String
+  phone        String    @unique
+  passwordHash String
+  role         String    @default("owner") // "owner" | "admin"
+  pgs          Pg[]
+  createdAt    DateTime  @default(now())
+}
+
+model College {
+  id        String   @id @default(uuid())
+  name      String
+  city      String
+  state     String
+  latitude  Float
+  longitude Float
+  pgs       Pg[]
+  createdAt DateTime @default(now())
+}
+
+model Pg {
+  id          String   @id @default(uuid())
+  name        String
+  address     String
+  description String
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  collegeId   String
+  college     College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  distanceKm  Float
+  amenities   String   // Comma-separated list: "WiFi, Meals, AC, PowerBackup"
+  isVerified  Boolean  @default(false)
+  imageUrl    String?
+  images      String?  // Comma-separated list of image URLs (building, washroom, mess, study)
+  viewCount   Int      @default(0) // Platform traffic view analytics
+  rooms       Room[]
+  queries     Query[]
+  reviews     Review[]
+  createdAt   DateTime @default(now())
+}
+
+model Room {
+  id               String    @id @default(uuid())
+  pgId             String
+  pg               Pg        @relation(fields: [pgId], references: [id], onDelete: Cascade)
+  sharingType      String    // "Single" | "Double" | "Triple"
+  priceMonthly     Float
+  genderPreference String    // "Boys" | "Girls" | "Co-ed"
+  availableBeds    Int
+  imageUrl         String?
+  images           String?  // Comma-separated list of room images (bed, study table, bathroom)
+  bookings         Booking[]
+  createdAt        DateTime  @default(now())
+}
+
+model Booking {
+  id                    String   @id @default(uuid())
+  roomId                String
+  room                  Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  studentName           String
+  studentPhone          String
+  studentCollegeIdPhoto String?  // Optional path or base64
+  amountPaid            Float    // ₹2200 (₹200 platform + ₹2000 token)
+  status                String   @default("Pending") // "Pending" | "Approved" | "Rejected" | "No-Show"
+  checkInDate           DateTime
+  utr                   String?  // UPI Transaction Reference
+  createdAt             DateTime @default(now())
+}
+
+model Query {
+  id           String   @id @default(uuid())
+  pgId         String
+  pg           Pg       @relation(fields: [pgId], references: [id], onDelete: Cascade)
+  studentName  String
+  studentPhone String
+  question     String
+  status       String   @default("Pending") // "Pending" | "Answered"
+  answer       String?
+  createdAt    DateTime @default(now())
+}
+
+model Review {
+  id          String   @id @default(uuid())
+  pgId        String
+  pg          Pg       @relation(fields: [pgId], references: [id], onDelete: Cascade)
+  studentName String   @default("Anonymous Senior")
+  rating      Int      // 1 to 5
+  comment     String
+  createdAt   DateTime @default(now())
+}
+
+model PgFormSubmission {
+  id           String   @id @default(uuid())
+  hostelName   String
+  address      String
+  collegeName  String
+  ownerName    String
+  ownerPhone   String
+  sharingTypes String   // Comma-separated e.g. "Double, Triple"
+  priceRange   String   // e.g. "4000-5500"
+  status       String   @default("Pending") // "Pending" | "Approved" | "Rejected"
+  description  String?
+  locationUrl  String?  // Google maps or lat/long location link
+  amenities    String?  // WiFi, Meals, etc.
+  imageUrl     String?  // Cover image
+  images       String?  // Washroom, mess, study gallery comma-separated
+  distanceKm   Float    @default(0.5)
+  createdAt    DateTime @default(now())
+}
