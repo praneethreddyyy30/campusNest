@@ -138,6 +138,18 @@ export default function OwnerDashboard() {
             Managing vacancies and booking requests for <strong className="text-indigo-600 font-extrabold">{pgName}</strong>
           </p>
         </div>
+        <div>
+          <button
+            onClick={async () => {
+              await fetch("/api/auth/logout", { method: "POST" });
+              router.push("/");
+              router.refresh();
+            }}
+            className="bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 font-extrabold text-xs py-2 px-4 rounded border border-red-200 cursor-pointer transition-colors"
+          >
+            Logout
+          </button>
+        </div>
       </div>
 
       {/* Analytics Summary Grid */}

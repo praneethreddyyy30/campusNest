@@ -412,14 +412,28 @@ export default function AdminPortal() {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in text-gray-900">
       {/* Page Header */}
-      <div className="bg-white border rounded-xl p-6 shadow-sm">
-        <span className="text-xs text-indigo-600 font-extrabold uppercase tracking-wider">
-          Super Admin Console
-        </span>
-        <h1 className="text-2xl font-black text-gray-900">CampusNest Operations Dashboard</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Monitor registered properties, manage escrow advances, process ambassador forms, and moderate student Q&As.
-        </p>
+      <div className="bg-white border rounded-xl p-6 shadow-sm flex justify-between items-center flex-wrap gap-4">
+        <div>
+          <span className="text-xs text-indigo-600 font-extrabold uppercase tracking-wider">
+            Super Admin Console
+          </span>
+          <h1 className="text-2xl font-black text-gray-900">CampusNest Operations Dashboard</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Monitor registered properties, manage escrow advances, process ambassador forms, and moderate student Q&As.
+          </p>
+        </div>
+        <div>
+          <button
+            onClick={async () => {
+              await fetch("/api/auth/logout", { method: "POST" });
+              router.push("/");
+              router.refresh();
+            }}
+            className="bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 font-extrabold text-xs py-2 px-4 rounded border border-red-200 cursor-pointer transition-colors"
+          >
+            Logout
+          </button>
+        </div>
       </div>
 
       {/* Tabs Navigation */}
