@@ -127,6 +127,14 @@ export async function POST(request: Request) {
       );
     }
 
+    const sanitizedPhone = studentPhone.replace(/\D/g, "");
+    if (!/^[6-9]\d{9}$/.test(sanitizedPhone)) {
+      return NextResponse.json(
+        { error: "Please enter a valid 10-digit Indian phone number (starting with 6-9)" },
+        { status: 400 }
+      );
+    }
+
     // Fetch the room to check availability
     const room = await db.room.findUnique({
       where: { id: roomId },
@@ -148,7 +156,7 @@ export async function POST(request: Request) {
       data: {
         roomId,
         studentName,
-        studentPhone,
+        studentPhone: sanitizedPhone,
         amountPaid: 2200, // ₹200 fee + ₹2000 token escrow
         status: "Pending_Payment",
         checkInDate: new Date(checkInDate),

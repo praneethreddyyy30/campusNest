@@ -124,6 +124,13 @@ export default function PGDetails({
     setBookingLoading(true);
     setBookingError("");
 
+    const phoneDigits = studentPhone.replace(/\D/g, "");
+    if (!/^[6-9]\d{9}$/.test(phoneDigits)) {
+      setBookingError("Please enter a valid 10-digit Indian phone number (starting with 6-9, no spaces or special symbols).");
+      setBookingLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/bookings", {
         method: "POST",
@@ -155,6 +162,13 @@ export default function PGDetails({
     e.preventDefault();
     setQuestionLoading(true);
     setQuestionSuccess(false);
+
+    const phoneDigits = questionPhone.replace(/\D/g, "");
+    if (!/^[6-9]\d{9}$/.test(phoneDigits)) {
+      alert("Please enter a valid 10-digit Indian phone number (starting with 6-9, no spaces or special symbols).");
+      setQuestionLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch("/api/queries", {

@@ -60,6 +60,13 @@ export default function PartnerRegistration() {
       return;
     }
 
+    const phoneDigits = ownerPhone.replace(/\D/g, "");
+    if (!/^[6-9]\d{9}$/.test(phoneDigits)) {
+      setError("Please enter a valid 10-digit Indian phone number (starting with 6-9, no spaces or special symbols) for the owner.");
+      setLoading(false);
+      return;
+    }
+
     // Compose amenities list
     const amenitiesArr: string[] = [];
     if (wifi) amenitiesArr.push("WiFi");

@@ -36,28 +36,12 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-
-    const updated = await db.$transaction(async (tx) => {
-      // 1. Update booking status to Approved
-      const b = await tx.booking.update({
-        where: { id: bookingId },
-        data: {
-          status: "Approved",
-          utr: transactionId,
-        },
-      });
-
-      // 2. Decrement bed count
-      await tx.room.update({
-        where: { id: booking.roomId },
-        data: {
-          availableBeds: {
-            decrement: 1,
-          },
-        },
-      });
-
-      return b;
+    const updated = await db.booking.update({
+      where: { id: bookingId },
+      data: {
+        status: "Pending",
+        utr: transactionId,
+      },
     });
 
     return NextResponse.json({ success: true, booking: updated });

@@ -28,13 +28,21 @@ export async function POST(request: Request) {
       );
     }
 
+    const sanitizedPhone = ownerPhone.replace(/\D/g, "");
+    if (!/^[6-9]\d{9}$/.test(sanitizedPhone)) {
+      return NextResponse.json(
+        { error: "Please enter a valid 10-digit Indian phone number (starting with 6-9) for the owner" },
+        { status: 400 }
+      );
+    }
+
     const submission = await db.pgFormSubmission.create({
       data: {
         hostelName,
         address,
         collegeName,
         ownerName,
-        ownerPhone: ownerPhone.replace(/\D/g, ""), // Keep digits only
+        ownerPhone: sanitizedPhone,
         sharingTypes,
         priceRange,
         description: description || "In-depth details provided by Campus Ambassador.",
