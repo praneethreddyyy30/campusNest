@@ -43,6 +43,7 @@ model Pg {
   imageUrl    String?
   images      String?  // Comma-separated list of image URLs (building, washroom, mess, study)
   viewCount   Int      @default(0) // Platform traffic view analytics
+  reservationFee Float @default(2000) // Landlord-defined escrow advance booking amount
   rooms       Room[]
   queries     Query[]
   reviews     Review[]

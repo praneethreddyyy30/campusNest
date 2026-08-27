@@ -42,6 +42,13 @@ function BookingTrackingContent({ id }: { id: string }) {
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [origin, setOrigin] = useState("http://localhost:3000");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setOrigin(window.location.origin);
+    }
+  }, []);
 
   const fetchBookingStatus = async () => {
     if (!phone) {
@@ -294,17 +301,52 @@ function BookingTrackingContent({ id }: { id: string }) {
               </dd>
             </div>
           </dl>
+
+          <div className="flex flex-wrap gap-2 pt-4 border-t mt-4 print:hidden">
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(
+                `My CampusNest Booking Receipt:\nHostel: ${pg.name}\nRoom: ${room.sharingType} Sharing\nExpected Check-in: ${new Date(checkInDate).toLocaleDateString("en-IN")}\nRef Code: CN-${id.slice(0, 8).toUpperCase()}\nTracking Link: ${origin}/bookings/${id}?phone=${studentPhone}`
+              )}`}
+              target="_blank"
+              className="inline-flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white font-semibold text-xs py-2 px-3.5 rounded transition-colors shadow-sm cursor-pointer"
+            >
+              📲 Save Reference to WhatsApp
+            </a>
+            <button
+              onClick={() => typeof window !== "undefined" && window.print()}
+              className="inline-flex items-center gap-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold text-xs py-2 px-3.5 rounded transition-colors shadow-sm cursor-pointer"
+            >
+              📄 Print / Save PDF Receipt
+            </button>
+          </div>
         </div>
 
         {/* State Conditional Blocks */}
         {isPending && (
-          <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-5 text-sm space-y-3">
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-5 text-sm space-y-3 print:hidden">
             <h4 className="font-extrabold">Your reservation is waiting for the Landlord to approve.</h4>
-            <p className="leading-relaxed">
+            <p className="leading-relaxed text-xs">
               We have locked ₹2,000 securely. The landlord has been alerted to review this booking. Once the landlord approves, we will unlock their contact numbers and address.
             </p>
-            <p className="text-xs font-semibold text-amber-700">
-              * Bookmark this page. Refresh it anytime to check updates!
+            <div className="bg-white border p-3 rounded-lg space-y-2 border-amber-150">
+              <span className="font-bold text-[10px] text-amber-800 block uppercase tracking-wider">
+                ⚡ Speed up approval:
+              </span>
+              <p className="text-[11px] text-gray-500 leading-normal">
+                If the owner is offline, click below to notify them directly on WhatsApp. They can approve your booking instantly with one click!
+              </p>
+              <a
+                href={`https://wa.me/91${pg.owner.phone}?text=${encodeURIComponent(
+                  `Hi ${pg.owner.name}, I have reserved a bed at ${pg.name} (${room.sharingType} sharing) via CampusNest. Ref: CN-${id.slice(0, 8).toUpperCase()}. Amount Paid: ₹${booking.amountPaid}. Please approve my booking by clicking here: ${origin}/owner/fast-approve?bookingId=${id}&phone=${pg.owner.phone}`
+                )}`}
+                target="_blank"
+                className="inline-flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white font-extrabold text-[11px] py-2 px-3.5 rounded transition-colors shadow-sm cursor-pointer mt-1"
+              >
+                📲 Notify Landlord on WhatsApp
+              </a>
+            </div>
+            <p className="text-[10px] font-semibold text-amber-600">
+              * Bookmark this page. You can also track this anytime on our home page by entering your phone number under "Track Booking".
             </p>
           </div>
         )}
