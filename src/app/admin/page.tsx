@@ -94,6 +94,7 @@ export default function AdminPortal() {
   const [pgAmenities, setPgAmenities] = useState("WiFi, Meals, RO Water, Security");
   const [pgImageUrl, setPgImageUrl] = useState("");
   const [pgImages, setPgImages] = useState("");
+  const [pgReservationFee, setPgReservationFee] = useState("2000");
 
   const fetchAdminData = async () => {
     try {
@@ -205,6 +206,7 @@ export default function AdminPortal() {
           amenities: pgAmenities,
           imageUrl: pgImageUrl,
           images: pgImages,
+          reservationFee: pgReservationFee,
         }),
       });
 
@@ -245,6 +247,7 @@ export default function AdminPortal() {
           amenities: pgAmenities,
           imageUrl: pgImageUrl,
           images: pgImages,
+          reservationFee: pgReservationFee,
           isVerified: showEditModal.isVerified,
         }),
       });
@@ -372,6 +375,7 @@ export default function AdminPortal() {
     setPgAmenities("WiFi, Meals, RO Water, Security");
     setPgImageUrl("");
     setPgImages("");
+    setPgReservationFee("2000");
   };
 
   const openEditModal = (pgItem: any) => {
@@ -384,6 +388,7 @@ export default function AdminPortal() {
     setPgAmenities(pgItem.amenities);
     setPgImageUrl(pgItem.imageUrl || "");
     setPgImages(pgItem.images || "");
+    setPgReservationFee((pgItem.reservationFee ?? 2000).toString());
     setShowEditModal(pgItem);
   };
 
@@ -1155,9 +1160,9 @@ export default function AdminPortal() {
             <h2 className="text-xl font-black text-gray-900">Register New PG Hostel</h2>
 
             <form onSubmit={handleCreatePg} className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">PG Hostel Name</label>
+                  <label className="block font-bold text-gray-700 mb-1">Hostel/PG Name</label>
                   <input
                     type="text"
                     required
@@ -1168,7 +1173,7 @@ export default function AdminPortal() {
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">Proximity Gate Distance (KM)</label>
+                  <label className="block font-bold text-gray-700 mb-1">Gate Distance (KM)</label>
                   <input
                     type="number"
                     step="0.1"
@@ -1176,6 +1181,17 @@ export default function AdminPortal() {
                     className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none"
                     value={pgDistance}
                     onChange={(e) => setPgDistance(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-gray-700 mb-1">Booking Advance (₹)</label>
+                  <input
+                    type="number"
+                    required
+                    placeholder="2000"
+                    className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none"
+                    value={pgReservationFee}
+                    onChange={(e) => setPgReservationFee(e.target.value)}
                   />
                 </div>
               </div>
@@ -1260,7 +1276,7 @@ export default function AdminPortal() {
             <h2 className="text-xl font-black text-gray-900">Edit PG Hostel Details</h2>
 
             <form onSubmit={handleUpdatePg} className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <label className="block font-bold text-gray-700 mb-1">PG Hostel Name</label>
                   <input
@@ -1272,7 +1288,7 @@ export default function AdminPortal() {
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">Proximity Gate Distance (KM)</label>
+                  <label className="block font-bold text-gray-700 mb-1">Gate Distance (KM)</label>
                   <input
                     type="number"
                     step="0.1"
@@ -1280,6 +1296,17 @@ export default function AdminPortal() {
                     className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none"
                     value={pgDistance}
                     onChange={(e) => setPgDistance(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-gray-700 mb-1">Booking Advance (₹)</label>
+                  <input
+                    type="number"
+                    required
+                    placeholder="2000"
+                    className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none"
+                    value={pgReservationFee}
+                    onChange={(e) => setPgReservationFee(e.target.value)}
                   />
                 </div>
               </div>

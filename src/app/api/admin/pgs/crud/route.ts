@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { name, address, description, collegeId, ownerId, ownerName, ownerPhone, distanceKm, amenities, imageUrl, images } = await request.json();
+    const { name, address, description, collegeId, ownerId, ownerName, ownerPhone, distanceKm, amenities, imageUrl, images, reservationFee } = await request.json();
 
     if (!name || !address || !collegeId || !ownerId || !distanceKm) {
       return NextResponse.json(
@@ -77,6 +77,7 @@ export async function POST(request: Request) {
         amenities: amenities || "WiFi, Meals, RO Water, Security",
         imageUrl: imageUrl || "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80",
         images: images || imageUrl || "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80",
+        reservationFee: reservationFee ? parseFloat(reservationFee) : 2000,
         isVerified: true,
       },
     });
@@ -122,7 +123,7 @@ export async function PUT(request: Request) {
   }
 
   try {
-    const { id, name, address, description, collegeId, ownerId, distanceKm, amenities, imageUrl, images, isVerified } = await request.json();
+    const { id, name, address, description, collegeId, ownerId, distanceKm, amenities, imageUrl, images, reservationFee, isVerified } = await request.json();
 
     if (!id || !name || !address || !collegeId || !ownerId || !distanceKm) {
       return NextResponse.json(
@@ -143,6 +144,7 @@ export async function PUT(request: Request) {
         amenities,
         imageUrl,
         images,
+        reservationFee: reservationFee ? parseFloat(reservationFee) : 2000,
         isVerified: isVerified ?? true,
       },
     });

@@ -45,6 +45,7 @@ interface PG {
   isVerified: boolean;
   imageUrl: string | null;
   images: string | null;
+  reservationFee: number;
   rooms: Room[];
   college: College;
   queries: FAQ[];
@@ -718,11 +719,11 @@ export default function PGDetails({
 
             {/* Price details explanation */}
             <div className="bg-indigo-50 border border-indigo-100 rounded-md p-4 space-y-2">
-              <h4 className="font-bold text-sm text-indigo-900">Total Booking Advance: ₹2,200</h4>
+              <h4 className="font-bold text-sm text-indigo-900">Total Booking Advance: ₹{pg.reservationFee + 200}</h4>
               <ul className="text-xs text-indigo-800 list-disc list-inside space-y-1">
                 <li><span className="font-semibold">₹200:</span> Platform service fee (non-refundable)</li>
-                <li><span className="font-semibold">₹2,000:</span> Token rent advance (Held safely in Escrow)</li>
-                <li>This ₹2,000 is deducted from your first month's PG rent at check-in.</li>
+                <li><span className="font-semibold">₹{pg.reservationFee}:</span> Token rent advance (Held safely in Escrow)</li>
+                <li>This ₹{pg.reservationFee} is deducted from your first month's PG rent at check-in.</li>
                 <li>Refundable if the owner rejects booking or doesn't have the bed!</li>
               </ul>
             </div>
@@ -730,7 +731,7 @@ export default function PGDetails({
             {/* Payment Details */}
             <div className="bg-indigo-50 border border-indigo-150 rounded-md p-4 space-y-4 text-xs">
               <h4 className="font-bold text-indigo-900 flex items-center gap-1 text-sm border-b pb-1">
-                UPI Payment Options (₹2,200)
+                UPI Payment Options (₹{pg.reservationFee + 200})
               </h4>
 
               {/* Option 1: Mobile direct redirection intent link */}
@@ -831,7 +832,7 @@ export default function PGDetails({
                 disabled={bookingLoading}
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-md text-sm mt-4 transition-colors cursor-pointer"
               >
-                {bookingLoading ? "Connecting to Gateway..." : "Proceed to Payment (₹2,200)"}
+                {bookingLoading ? "Connecting to Gateway..." : `Proceed to Payment (₹${pg.reservationFee + 200})`}
               </button>
             </form>
           </div>

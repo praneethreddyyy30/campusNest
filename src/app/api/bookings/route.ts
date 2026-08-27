@@ -135,9 +135,12 @@ export async function POST(request: Request) {
       );
     }
 
-    // Fetch the room to check availability
+    // Fetch the room and PG to check availability and reservation fee rate
     const room = await db.room.findUnique({
       where: { id: roomId },
+      include: {
+        pg: true,
+      },
     });
 
     if (!room) {
@@ -157,7 +160,7 @@ export async function POST(request: Request) {
         roomId,
         studentName,
         studentPhone: sanitizedPhone,
-        amountPaid: 2200, // ₹200 fee + ₹2000 token escrow
+        amountPaid: room.pg.reservationFee + 200, // Landlord custom advance rate + ₹200 commission fee
         status: "Pending_Payment",
         checkInDate: new Date(checkInDate),
         utr: "GATEWAY_PENDING",
