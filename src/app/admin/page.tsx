@@ -304,6 +304,8 @@ export default function AdminPortal() {
           description: showApproveLeadModal.description || `Price Range: ${showApproveLeadModal.priceRange}. Sharing: ${showApproveLeadModal.sharingTypes}`,
           collegeId: pgCollegeId,
           ownerId: pgOwnerId,
+          ownerName: showApproveLeadModal.ownerName,
+          ownerPhone: showApproveLeadModal.ownerPhone,
           distanceKm: pgDistance || showApproveLeadModal.distanceKm?.toString() || "0.5",
           amenities: showApproveLeadModal.amenities || "WiFi, Meals, RO Water, Security",
           imageUrl: showApproveLeadModal.imageUrl || "",
@@ -387,7 +389,7 @@ export default function AdminPortal() {
 
   const openApproveLeadModal = (leadItem: PgLead) => {
     setPgCollegeId(colleges[0]?.id || "");
-    setPgOwnerId(owners[0]?.id || "");
+    setPgOwnerId("CREATE_NEW");
     setPgDistance("0.5");
     setShowApproveLeadModal(leadItem);
   };
@@ -1401,14 +1403,18 @@ export default function AdminPortal() {
                 <div>
                   <label className="block font-bold text-gray-700 mb-1">Select Landlord User Link</label>
                   <select
-                    className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none cursor-pointer"
+                    className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none cursor-pointer font-semibold"
                     value={pgOwnerId}
                     onChange={(e) => setPgOwnerId(e.target.value)}
                   >
+                    <option value="CREATE_NEW">🆕 Register New Account ({showApproveLeadModal.ownerName})</option>
                     {owners.map((o) => (
                       <option key={o.id} value={o.id}>{o.name} ({o.phone})</option>
                     ))}
                   </select>
+                  <span className="text-[9px] text-gray-400 mt-1 block leading-normal">
+                    If registering new, default login password will be <strong className="text-indigo-600 font-bold font-mono">password123</strong>
+                  </span>
                 </div>
               </div>
 

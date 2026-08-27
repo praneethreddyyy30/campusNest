@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { name, address, description, collegeId, ownerId, distanceKm, amenities, imageUrl, images } = await request.json();
+    const { name, address, description, collegeId, ownerId, ownerName, ownerPhone, distanceKm, amenities, imageUrl, images } = await request.json();
 
     if (!name || !address || !collegeId || !ownerId || !distanceKm) {
       return NextResponse.json(
@@ -31,13 +31,48 @@ export async function POST(request: Request) {
       );
     }
 
+    let finalOwnerId = ownerId;
+    if (ownerId === "CREATE_NEW") {
+      if (!ownerName || !ownerPhone) {
+        return NextResponse.json(
+          { error: "Owner name and phone are required to register a new landlord user account." },
+          { status: 400 }
+        );
+      }
+
+      const sanitizedPhone = ownerPhone.replace(/\D/g, "");
+      if (!/^[6-9]\d{9}$/.test(sanitizedPhone)) {
+        return NextResponse.json(
+          { error: "Invalid owner phone number. Must be a 10-digit Indian mobile number." },
+          { status: 400 }
+        );
+      }
+
+      let existingUser = await db.user.findUnique({
+        where: { phone: sanitizedPhone },
+      });
+
+      if (!existingUser) {
+        const { hashPassword } = await import("@/lib/auth");
+        existingUser = await db.user.create({
+          data: {
+            name: ownerName,
+            phone: sanitizedPhone,
+            passwordHash: hashPassword("password123"),
+            role: "owner",
+          },
+        });
+      }
+      finalOwnerId = existingUser.id;
+    }
+
     const pg = await db.pg.create({
       data: {
         name,
         address,
         description: description || "Fully furnished student PG hostel accommodation close to college outskirts.",
         collegeId,
-        ownerId,
+        ownerId: finalOwnerId,
         distanceKm: parseFloat(distanceKm),
         amenities: amenities || "WiFi, Meals, RO Water, Security",
         imageUrl: imageUrl || "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80",
