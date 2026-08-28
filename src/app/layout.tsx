@@ -34,14 +34,14 @@ export default function RootLayout({
         {/* Floating Support Widget */}
         <div className="fixed bottom-4 right-4 z-40">
           <a
-            href="https://wa.me/919999999999"
+            href="https://wa.me/919391333699"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-extrabold text-xs px-4 py-3 rounded-full shadow-2xl transition-transform hover:scale-105 cursor-pointer"
             title="CampusNest Customer Support"
           >
             <span className="text-base">💬</span>
-            <span>Support: +91 99999 99999</span>
+            <span>Support: +91 93913 33699</span>
           </a>
         </div>
         <footer className="bg-white border-t py-6 text-center text-sm text-gray-500">

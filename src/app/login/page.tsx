@@ -103,7 +103,7 @@ export default function Login() {
           <strong className="font-mono text-gray-600">password123</strong>
         </p>
         <p>
-          Admin: <strong className="font-mono text-gray-600">9999999999</strong> /{" "}
+          Admin: <strong className="font-mono text-gray-600">9391333699</strong> /{" "}
           <strong className="font-mono text-gray-600">admin123</strong>
         </p>
       </div>
