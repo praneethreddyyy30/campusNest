@@ -88,7 +88,7 @@ export default function TrackBookingLookup() {
             <input
               type="tel"
               placeholder="e.g. 9876543210"
-              className="w-full bg-gray-50 border rounded-md p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              className="w-full bg-gray-50 border rounded-md p-3 text-sm text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
             />
@@ -107,7 +107,7 @@ export default function TrackBookingLookup() {
             <input
               type="text"
               placeholder="e.g. CPG-3AF90D1C"
-              className="w-full bg-gray-50 border rounded-md p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono uppercase"
+              className="w-full bg-gray-50 border rounded-md p-3 text-sm text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono uppercase"
               value={refCode}
               onChange={(e) => setRefCode(e.target.value)}
             />
