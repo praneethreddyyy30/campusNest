@@ -322,7 +322,7 @@ function BookingTrackingContent({ id }: { id: string }) {
 
           <div className="flex flex-wrap gap-2 pt-4 border-t mt-4 print:hidden">
             <a
-              href={`https://wa.me/?text=${encodeURIComponent(
+              href={`https://wa.me/91${studentPhone}?text=${encodeURIComponent(
                 `My CampusNest Booking Receipt:\nHostel: ${pg.name}\nRoom: ${room.sharingType} Sharing\nExpected Check-in: ${new Date(checkInDate).toLocaleDateString("en-IN")}\nRef Code: CN-${id.slice(0, 8).toUpperCase()}\nTracking Link: ${origin}/bookings/${id}?phone=${studentPhone}`
               )}`}
               target="_blank"
