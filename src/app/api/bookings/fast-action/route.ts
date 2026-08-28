@@ -122,7 +122,7 @@ export async function POST(request: Request) {
             },
           },
         });
-      } else if (oldStatus === "Approved" && newStatus === "Rejected") {
+      } else if (oldStatus === "Approved" && (newStatus === "Rejected" || newStatus === "No-Show")) {
         await tx.room.update({
           where: { id: booking.roomId },
           data: {

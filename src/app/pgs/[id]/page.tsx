@@ -148,7 +148,7 @@ export default function PGDetails({
 
       if (res.ok && data.success) {
         // Redirect to secure mock payment gateway checkout sandbox
-        router.push(`/checkout?bookingId=${data.bookingId}&phone=${encodeURIComponent(studentPhone)}`);
+        router.push(`/checkout?bookingId=${data.bookingId}&phone=${encodeURIComponent(phoneDigits)}`);
       } else {
         setBookingError(data.error || "Failed to make reservation request.");
       }
