@@ -14,6 +14,7 @@ interface Room {
   availableBeds: number;
   genderPreference: string;
   imageUrl?: string;
+  images?: string;
   pg: PG;
 }
 
@@ -51,14 +52,38 @@ export default function OwnerDashboard() {
   const [showEditRoomModal, setShowEditRoomModal] = useState<Room | null>(null);
   const [editRoomRent, setEditRoomRent] = useState("");
   const [editRoomBeds, setEditRoomBeds] = useState("");
-  const [editRoomImageUrl, setEditRoomImageUrl] = useState("");
+  const [editRoomImages, setEditRoomImages] = useState<string[]>([""]);
   const [roomSaving, setRoomSaving] = useState(false);
 
   const openEditRoomModal = (room: Room) => {
     setEditRoomRent(room.priceMonthly.toString());
     setEditRoomBeds(room.availableBeds.toString());
-    setEditRoomImageUrl(room.imageUrl || "");
+    
+    // Parse images comma-separated string
+    let parsedImages = [""];
+    if (room.images) {
+      parsedImages = room.images.split(",").map(img => img.trim()).filter(Boolean);
+    } else if (room.imageUrl) {
+      parsedImages = [room.imageUrl];
+    }
+    
+    setEditRoomImages(parsedImages.length > 0 ? parsedImages : [""]);
     setShowEditRoomModal(room);
+  };
+
+  const handleAddImageField = () => {
+    setEditRoomImages([...editRoomImages, ""]);
+  };
+
+  const handleUpdateImageField = (idx: number, value: string) => {
+    const updated = [...editRoomImages];
+    updated[idx] = value;
+    setEditRoomImages(updated);
+  };
+
+  const handleRemoveImageField = (idx: number) => {
+    const updated = editRoomImages.filter((_, i) => i !== idx);
+    setEditRoomImages(updated.length > 0 ? updated : [""]);
   };
 
   const fetchData = async () => {
@@ -151,7 +176,7 @@ export default function OwnerDashboard() {
           roomId: showEditRoomModal.id,
           availableBeds: editRoomBeds,
           priceMonthly: editRoomRent,
-          imageUrl: editRoomImageUrl,
+          images: editRoomImages,
         }),
       });
 
@@ -575,31 +600,62 @@ export default function OwnerDashboard() {
                 />
               </div>
 
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">Room Setup Image URL</label>
-                <input
-                  type="url"
-                  required
-                  placeholder="https://images.unsplash.com/photo-..."
-                  className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none text-xs"
-                  value={editRoomImageUrl}
-                  onChange={(e) => setEditRoomImageUrl(e.target.value)}
-                />
+              <div className="space-y-2 border-t pt-3">
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block font-bold text-gray-700">Room Setup Images</label>
+                  <button
+                    type="button"
+                    onClick={handleAddImageField}
+                    className="text-[10px] text-indigo-600 hover:text-indigo-800 font-extrabold cursor-pointer"
+                  >
+                    ➕ Add Image URL
+                  </button>
+                </div>
+                
+                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                  {editRoomImages.map((url, idx) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <input
+                        type="url"
+                        required
+                        placeholder="https://images.unsplash.com/photo-..."
+                        className="flex-grow border bg-gray-50 p-2 rounded text-gray-900 focus:outline-none text-xs"
+                        value={url}
+                        onChange={(e) => handleUpdateImageField(idx, e.target.value)}
+                      />
+                      {editRoomImages.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImageField(idx)}
+                          className="text-red-500 hover:text-red-700 text-xs font-bold p-2 cursor-pointer"
+                          title="Remove image"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
                 <span className="text-[9px] text-gray-400 mt-1 block leading-normal">
-                  Provide an image showing the bed setup, attachments, or ventilation of this specific room type.
+                  Provide multiple images to showcase different angles (bathroom, study desks, ventilation, entry).
                 </span>
               </div>
 
-              {editRoomImageUrl && (
-                <div className="border rounded-lg overflow-hidden h-28 bg-gray-50 flex items-center justify-center relative">
-                  <img
-                    src={editRoomImageUrl}
-                    alt="Preview"
-                    className="h-full w-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80";
-                    }}
-                  />
+              {/* Multiple Image Preview Grid */}
+              {editRoomImages.filter(Boolean).length > 0 && (
+                <div className="grid grid-cols-3 gap-2 border rounded-lg p-2 bg-gray-50 max-h-24 overflow-y-auto">
+                  {editRoomImages.filter(Boolean).map((url, idx) => (
+                    <div key={idx} className="h-16 rounded overflow-hidden relative border bg-white flex items-center justify-center">
+                      <img
+                        src={url}
+                        alt={`Preview ${idx + 1}`}
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=100&q=50";
+                        }}
+                      />
+                    </div>
+                  ))}
                 </div>
               )}
 

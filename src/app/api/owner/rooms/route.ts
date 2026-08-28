@@ -43,7 +43,7 @@ export async function PUT(request: Request) {
     }
 
     const session = JSON.parse(sessionCookie);
-    const { roomId, availableBeds, priceMonthly, imageUrl } = await request.json();
+    const { roomId, availableBeds, priceMonthly, imageUrl, images } = await request.json();
 
     if (!roomId) {
       return NextResponse.json(
@@ -75,9 +75,15 @@ export async function PUT(request: Request) {
     if (priceMonthly !== undefined) {
       updateData.priceMonthly = parseFloat(priceMonthly);
     }
-    if (imageUrl !== undefined) {
+    
+    // Support either single imageUrl string or images array
+    if (images !== undefined && Array.isArray(images)) {
+      const filtered = images.filter((img: string) => img.trim() !== "");
+      updateData.images = filtered.join(",");
+      updateData.imageUrl = filtered[0] || "";
+    } else if (imageUrl !== undefined) {
       updateData.imageUrl = imageUrl;
-      updateData.images = imageUrl; // Update primary images list
+      updateData.images = imageUrl;
     }
 
     const updatedRoom = await db.room.update({
