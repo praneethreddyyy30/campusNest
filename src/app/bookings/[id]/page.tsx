@@ -43,6 +43,7 @@ function BookingTrackingContent({ id }: { id: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [origin, setOrigin] = useState("http://localhost:3000");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -87,12 +88,15 @@ function BookingTrackingContent({ id }: { id: string }) {
       const cleanUrl = window.location.pathname + `?phone=${encodeURIComponent(phone)}`;
       window.history.replaceState({}, document.title, cleanUrl);
 
-      // Launch WhatsApp notification automatically to the student
+      // 1. Show the receipt save modal for the student
+      setShowSuccessModal(true);
+
+      // 2. Launch WhatsApp notification automatically to notify the Landlord for instant approval
       const pg = booking.room.pg;
       const refCode = id.slice(0, 8).toUpperCase();
-      const studentText = `My CampusNest Booking Receipt:\nHostel: ${pg.name}\nRoom: ${booking.room.sharingType} Sharing\nExpected Check-in: ${new Date(booking.checkInDate).toLocaleDateString("en-IN")}\nRef Code: CN-${refCode}\nTracking Link: ${origin}/bookings/${id}?phone=${booking.studentPhone}`;
+      const landlordText = `Hi ${pg.owner.name}, I have reserved a bed at ${pg.name} (${booking.room.sharingType} sharing) via CampusNest. Ref: CN-${refCode}. Amount Paid: ₹${booking.amountPaid}. Please approve my booking by clicking here: ${origin}/owner/fast-approve?bookingId=${id}&phone=${pg.owner.phone}`;
       
-      const whatsappUrl = `https://wa.me/91${booking.studentPhone}?text=${encodeURIComponent(studentText)}`;
+      const whatsappUrl = `https://wa.me/91${pg.owner.phone}?text=${encodeURIComponent(landlordText)}`;
       window.open(whatsappUrl, "_blank");
     }
   }, [booking, paidParam, id, phone, origin]);
@@ -473,6 +477,65 @@ function BookingTrackingContent({ id }: { id: string }) {
           </a>
         </div>
       </div>
+
+      {/* CHECKOUT SUCCESS RECEIPT OVERLAY MODAL */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 print:hidden">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border text-center space-y-5 text-gray-900 relative">
+            
+            {/* Green Check Animation Circle */}
+            <div className="mx-auto h-16 w-16 bg-green-50 text-green-600 rounded-full flex items-center justify-center text-3xl font-black shadow-inner border border-green-200">
+              ✓
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-lg font-black text-gray-950">Payment Successful!</h3>
+              <p className="text-[11px] text-gray-500 leading-normal">
+                Your booking advance is verified and secured in escrow. We have automatically opened a WhatsApp tab to alert the landlord for instant approval.
+              </p>
+            </div>
+
+            {/* Quick Actions Panel */}
+            <div className="bg-gray-50 border p-3 rounded-xl space-y-2.5 text-left">
+              <span className="font-bold text-[9px] text-gray-400 uppercase tracking-wider block">
+                Your Next Receipt Actions:
+              </span>
+              <div className="space-y-2 text-xs">
+                {/* Action 1: Save reference to WhatsApp */}
+                <a
+                  href={`https://wa.me/91${studentPhone}?text=${encodeURIComponent(
+                    `My CampusNest Booking Receipt:\nHostel: ${pg.name}\nRoom: ${room.sharingType} Sharing\nExpected Check-in: ${new Date(checkInDate).toLocaleDateString("en-IN")}\nRef Code: CN-${id.slice(0, 8).toUpperCase()}\nTracking Link: ${origin}/bookings/${id}?phone=${studentPhone}`
+                  )}`}
+                  target="_blank"
+                  className="w-full flex items-center justify-center gap-1.5 bg-green-600 hover:bg-green-700 text-white font-extrabold py-2.5 px-4 rounded-lg transition-colors cursor-pointer"
+                >
+                  📲 Save Receipt to My WhatsApp
+                </a>
+                
+                {/* Action 2: Print / Save PDF */}
+                <button
+                  onClick={() => {
+                    setShowSuccessModal(false);
+                    setTimeout(() => window.print(), 300);
+                  }}
+                  className="w-full flex items-center justify-center gap-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-2.5 px-4 rounded-lg transition-colors cursor-pointer"
+                >
+                  📄 Download Receipt PDF
+                </button>
+              </div>
+            </div>
+
+            {/* Close trigger */}
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="text-xs font-semibold text-gray-400 hover:text-gray-600 cursor-pointer block mx-auto pt-2"
+            >
+              Continue to Tracking Dashboard
+            </button>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }
