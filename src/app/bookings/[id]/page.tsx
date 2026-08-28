@@ -87,12 +87,12 @@ function BookingTrackingContent({ id }: { id: string }) {
       const cleanUrl = window.location.pathname + `?phone=${encodeURIComponent(phone)}`;
       window.history.replaceState({}, document.title, cleanUrl);
 
-      // Launch WhatsApp notification automatically
+      // Launch WhatsApp notification automatically to the student
       const pg = booking.room.pg;
       const refCode = id.slice(0, 8).toUpperCase();
-      const landlordText = `Hi ${pg.owner.name}, I have reserved a bed at ${pg.name} (${booking.room.sharingType} sharing) via CampusNest. Ref: CN-${refCode}. Amount Paid: ₹${booking.amountPaid}. Please approve my booking by clicking here: ${origin}/owner/fast-approve?bookingId=${id}&phone=${pg.owner.phone}`;
+      const studentText = `My CampusNest Booking Receipt:\nHostel: ${pg.name}\nRoom: ${booking.room.sharingType} Sharing\nExpected Check-in: ${new Date(booking.checkInDate).toLocaleDateString("en-IN")}\nRef Code: CN-${refCode}\nTracking Link: ${origin}/bookings/${id}?phone=${booking.studentPhone}`;
       
-      const whatsappUrl = `https://wa.me/91${pg.owner.phone}?text=${encodeURIComponent(landlordText)}`;
+      const whatsappUrl = `https://wa.me/91${booking.studentPhone}?text=${encodeURIComponent(studentText)}`;
       window.open(whatsappUrl, "_blank");
     }
   }, [booking, paidParam, id, phone, origin]);
