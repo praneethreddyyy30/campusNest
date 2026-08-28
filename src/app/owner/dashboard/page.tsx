@@ -37,6 +37,14 @@ export default function OwnerDashboard() {
   const [ownerName, setOwnerName] = useState("");
   const router = useRouter();
 
+  // Settings profile hooks
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editPassword, setEditPassword] = useState("");
+  const [editConfirmPassword, setEditConfirmPassword] = useState("");
+  const [settingsLoading, setSettingsLoading] = useState(false);
+
   const fetchData = async () => {
     try {
       // 1. Verify session
@@ -47,6 +55,8 @@ export default function OwnerDashboard() {
         return;
       }
       setOwnerName(sessionData.user.name);
+      setEditName(sessionData.user.name);
+      setEditPhone(sessionData.user.phone);
 
       // 2. Fetch rooms
       const roomsRes = await fetch("/api/owner/rooms");
@@ -69,6 +79,43 @@ export default function OwnerDashboard() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const handleUpdateSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (editPassword && editPassword !== editConfirmPassword) {
+      alert("New passwords do not match!");
+      return;
+    }
+
+    setSettingsLoading(true);
+    try {
+      const res = await fetch("/api/owner/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editName,
+          phone: editPhone,
+          password: editPassword || undefined,
+        }),
+      });
+
+      if (res.ok) {
+        alert("Profile details updated successfully!");
+        setShowSettingsModal(false);
+        setEditPassword("");
+        setEditConfirmPassword("");
+        fetchData();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to update profile settings.");
+      }
+    } catch (err) {
+      alert("Connection timeout. Profile could not be updated.");
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
 
   const handleBookingStatus = async (bookingId: string, status: string) => {
     try {
@@ -138,7 +185,13 @@ export default function OwnerDashboard() {
             Managing vacancies and booking requests for <strong className="text-indigo-600 font-extrabold">{pgName}</strong>
           </p>
         </div>
-        <div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowSettingsModal(true)}
+            className="bg-white border hover:bg-gray-50 text-gray-700 font-extrabold text-xs py-2 px-4 rounded cursor-pointer transition-colors"
+          >
+            ⚙️ Edit Profile
+          </button>
           <button
             onClick={async () => {
               await fetch("/api/auth/logout", { method: "POST" });
@@ -321,6 +374,90 @@ export default function OwnerDashboard() {
           </div>
         </div>
       </div>
+
+      {/* SETTINGS MODAL */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-gray-100 text-xs text-gray-900">
+            <div className="flex justify-between items-center border-b pb-2">
+              <h3 className="font-extrabold text-sm text-gray-900">Update Profile Settings</h3>
+              <button
+                onClick={() => {
+                  setShowSettingsModal(false);
+                  setEditPassword("");
+                  setEditConfirmPassword("");
+                }}
+                className="text-gray-400 hover:text-gray-600 text-lg font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateSettings} className="space-y-4">
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">Registered Name</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none font-semibold text-xs"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">Mobile Phone Number</label>
+                <input
+                  type="tel"
+                  required
+                  className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none font-semibold text-xs"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                />
+                <span className="text-[9px] text-gray-400 mt-1 block">
+                  Must be a valid 10-digit Indian mobile number.
+                </span>
+              </div>
+
+              <div className="border-t pt-3">
+                <span className="font-bold text-[10px] text-indigo-600 uppercase tracking-wider block mb-2">
+                  Change Password (Optional)
+                </span>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block font-bold text-gray-700 mb-1">New Password</label>
+                    <input
+                      type="password"
+                      placeholder="Leave blank to keep current"
+                      className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none text-xs"
+                      value={editPassword}
+                      onChange={(e) => setEditPassword(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-700 mb-1">Confirm New Password</label>
+                    <input
+                      type="password"
+                      placeholder="Confirm new password"
+                      className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none text-xs"
+                      value={editConfirmPassword}
+                      onChange={(e) => setEditConfirmPassword(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={settingsLoading}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3 rounded-lg text-xs mt-6 transition-colors cursor-pointer shadow"
+              >
+                {settingsLoading ? "Saving Settings..." : "Save Profile Settings"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
