@@ -13,59 +13,122 @@ export async function GET(request: Request) {
     const sessionCookie = cookieStore.get("campus_user_session")?.value;
 
     // Case 1: Student Lookup (Guest mode)
-    if (bookingId && phone) {
-      const booking = await db.booking.findUnique({
-        where: { id: bookingId },
-        include: {
-          room: {
-            include: {
-              pg: {
-                include: {
-                  owner: {
-                    select: { name: true, phone: true },
+    if (bookingId || phone) {
+      if (bookingId && phone) {
+        const booking = await db.booking.findUnique({
+          where: { id: bookingId },
+          include: {
+            room: {
+              include: {
+                pg: {
+                  include: {
+                    owner: {
+                      select: { name: true, phone: true },
+                    },
                   },
                 },
               },
             },
           },
-        },
-      });
+        });
 
-      if (!booking || booking.studentPhone !== phone) {
-        return NextResponse.json(
-          { error: "Booking not found or phone number mismatch" },
-          { status: 404 }
-        );
+        if (!booking || booking.studentPhone !== phone) {
+          return NextResponse.json(
+            { error: "Booking not found or phone number mismatch" },
+            { status: 404 }
+          );
+        }
+
+        const isApproved = booking.status === "Approved";
+        return NextResponse.json({
+          id: booking.id,
+          studentName: booking.studentName,
+          studentPhone: booking.studentPhone,
+          amountPaid: booking.amountPaid,
+          status: booking.status,
+          checkInDate: booking.checkInDate,
+          createdAt: booking.createdAt,
+          utr: booking.utr,
+          room: {
+            sharingType: booking.room.sharingType,
+            priceMonthly: booking.room.priceMonthly,
+            genderPreference: booking.room.genderPreference,
+            pg: {
+              name: booking.room.pg.name,
+              address: isApproved ? booking.room.pg.address : "Hidden until Approved",
+              description: booking.room.pg.description,
+              distanceKm: booking.room.pg.distanceKm,
+              owner: isApproved
+                ? booking.room.pg.owner
+                : { name: "Hidden", phone: "Hidden" },
+            },
+          },
+        });
       }
 
-      // Hide owner contact details unless the booking is Approved!
-      const isApproved = booking.status === "Approved";
-      const sanitizedBooking = {
-        id: booking.id,
-        studentName: booking.studentName,
-        studentPhone: booking.studentPhone,
-        amountPaid: booking.amountPaid,
-        status: booking.status,
-        checkInDate: booking.checkInDate,
-        createdAt: booking.createdAt,
-        utr: booking.utr,
-        room: {
-          sharingType: booking.room.sharingType,
-          priceMonthly: booking.room.priceMonthly,
-          genderPreference: booking.room.genderPreference,
-          pg: {
-            name: booking.room.pg.name,
-            address: isApproved ? booking.room.pg.address : "Hidden until Approved",
-            description: booking.room.pg.description,
-            distanceKm: booking.room.pg.distanceKm,
-            owner: isApproved
-              ? booking.room.pg.owner
-              : { name: "Hidden", phone: "Hidden" },
+      if (phone) {
+        const bookings = await db.booking.findMany({
+          where: { studentPhone: phone },
+          include: {
+            room: {
+              include: {
+                pg: true,
+              },
+            },
           },
-        },
-      };
+          orderBy: { createdAt: "desc" },
+        });
+        return NextResponse.json(bookings);
+      }
 
-      return NextResponse.json(sanitizedBooking);
+      if (bookingId) {
+        const booking = await db.booking.findUnique({
+          where: { id: bookingId },
+          include: {
+            room: {
+              include: {
+                pg: {
+                  include: {
+                    owner: {
+                      select: { name: true, phone: true },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        if (!booking) {
+          return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+        }
+
+        const isApproved = booking.status === "Approved";
+        return NextResponse.json({
+          id: booking.id,
+          studentName: booking.studentName,
+          studentPhone: booking.studentPhone,
+          amountPaid: booking.amountPaid,
+          status: booking.status,
+          checkInDate: booking.checkInDate,
+          createdAt: booking.createdAt,
+          utr: booking.utr,
+          room: {
+            sharingType: booking.room.sharingType,
+            priceMonthly: booking.room.priceMonthly,
+            genderPreference: booking.room.genderPreference,
+            pg: {
+              name: booking.room.pg.name,
+              address: isApproved ? booking.room.pg.address : "Hidden until Approved",
+              description: booking.room.pg.description,
+              distanceKm: booking.room.pg.distanceKm,
+              owner: isApproved
+                ? booking.room.pg.owner
+                : { name: "Hidden", phone: "Hidden" },
+            },
+          },
+        });
+      }
     }
 
     // Case 2: Session-based Auth (Owner or Admin)
