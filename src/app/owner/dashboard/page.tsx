@@ -13,6 +13,7 @@ interface Room {
   priceMonthly: number;
   availableBeds: number;
   genderPreference: string;
+  imageUrl?: string;
   pg: PG;
 }
 
@@ -43,7 +44,22 @@ export default function OwnerDashboard() {
   const [editPhone, setEditPhone] = useState("");
   const [editPassword, setEditPassword] = useState("");
   const [editConfirmPassword, setEditConfirmPassword] = useState("");
+  const [editReservationFee, setEditReservationFee] = useState("2000");
   const [settingsLoading, setSettingsLoading] = useState(false);
+
+  // Edit Room modal hooks
+  const [showEditRoomModal, setShowEditRoomModal] = useState<Room | null>(null);
+  const [editRoomRent, setEditRoomRent] = useState("");
+  const [editRoomBeds, setEditRoomBeds] = useState("");
+  const [editRoomImageUrl, setEditRoomImageUrl] = useState("");
+  const [roomSaving, setRoomSaving] = useState(false);
+
+  const openEditRoomModal = (room: Room) => {
+    setEditRoomRent(room.priceMonthly.toString());
+    setEditRoomBeds(room.availableBeds.toString());
+    setEditRoomImageUrl(room.imageUrl || "");
+    setShowEditRoomModal(room);
+  };
 
   const fetchData = async () => {
     try {
@@ -61,7 +77,11 @@ export default function OwnerDashboard() {
       // 2. Fetch rooms
       const roomsRes = await fetch("/api/owner/rooms");
       if (roomsRes.ok) {
-        setRooms(await roomsRes.json());
+        const roomsData = await roomsRes.json();
+        setRooms(roomsData);
+        if (roomsData.length > 0) {
+          setEditReservationFee((roomsData[0]?.pg?.reservationFee ?? 2000).toString());
+        }
       }
 
       // 3. Fetch bookings
@@ -97,6 +117,7 @@ export default function OwnerDashboard() {
           name: editName,
           phone: editPhone,
           password: editPassword || undefined,
+          reservationFee: editReservationFee,
         }),
       });
 
@@ -114,6 +135,38 @@ export default function OwnerDashboard() {
       alert("Connection timeout. Profile could not be updated.");
     } finally {
       setSettingsLoading(false);
+    }
+  };
+
+  const handleSaveRoomDetails = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!showEditRoomModal) return;
+
+    setRoomSaving(true);
+    try {
+      const res = await fetch("/api/owner/rooms", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          roomId: showEditRoomModal.id,
+          availableBeds: editRoomBeds,
+          priceMonthly: editRoomRent,
+          imageUrl: editRoomImageUrl,
+        }),
+      });
+
+      if (res.ok) {
+        alert("Room details saved successfully!");
+        setShowEditRoomModal(null);
+        fetchData();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to update room details.");
+      }
+    } catch (err) {
+      alert("Connection timeout. Room details could not be updated.");
+    } finally {
+      setRoomSaving(false);
     }
   };
 
@@ -347,25 +400,35 @@ export default function OwnerDashboard() {
                     <p className="text-xs text-gray-400">Rent: ₹{room.priceMonthly}/mo</p>
                   </div>
 
-                  {/* Bed counter widget */}
-                  <div className="flex items-center space-x-3 bg-white border rounded-lg p-1.5 shadow-sm">
+                  {/* Bed counter widget & Edit button */}
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-3 bg-white border rounded-lg p-1.5 shadow-sm">
+                      <button
+                        onClick={() => handleUpdateBeds(room.id, room.availableBeds - 1)}
+                        disabled={room.availableBeds <= 0}
+                        className={`h-7 w-7 rounded flex items-center justify-center font-bold text-gray-700 border hover:bg-gray-50 cursor-pointer ${
+                          room.availableBeds <= 0 ? "opacity-30 cursor-not-allowed" : ""
+                        }`}
+                      >
+                        -
+                      </button>
+                      <span className="font-extrabold text-gray-900 w-6 text-center select-none">
+                        {room.availableBeds}
+                      </span>
+                      <button
+                        onClick={() => handleUpdateBeds(room.id, room.availableBeds + 1)}
+                        className="h-7 w-7 rounded flex items-center justify-center font-bold text-gray-700 border hover:bg-gray-50 cursor-pointer"
+                      >
+                        +
+                      </button>
+                    </div>
+
                     <button
-                      onClick={() => handleUpdateBeds(room.id, room.availableBeds - 1)}
-                      disabled={room.availableBeds <= 0}
-                      className={`h-7 w-7 rounded flex items-center justify-center font-bold text-gray-700 border hover:bg-gray-50 cursor-pointer ${
-                        room.availableBeds <= 0 ? "opacity-30 cursor-not-allowed" : ""
-                      }`}
+                      onClick={() => openEditRoomModal(room)}
+                      className="h-9 w-9 border rounded-lg hover:bg-gray-50 text-gray-650 flex items-center justify-center cursor-pointer transition-colors shadow-sm bg-white"
+                      title="Edit Room details & images"
                     >
-                      -
-                    </button>
-                    <span className="font-extrabold text-gray-900 w-6 text-center select-none">
-                      {room.availableBeds}
-                    </span>
-                    <button
-                      onClick={() => handleUpdateBeds(room.id, room.availableBeds + 1)}
-                      className="h-7 w-7 rounded flex items-center justify-center font-bold text-gray-700 border hover:bg-gray-50 cursor-pointer"
-                    >
-                      +
+                      ✏️
                     </button>
                   </div>
                 </div>
@@ -419,6 +482,20 @@ export default function OwnerDashboard() {
                 </span>
               </div>
 
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">Booking Advance (₹)</label>
+                <input
+                  type="number"
+                  required
+                  className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none font-semibold text-xs font-mono"
+                  value={editReservationFee}
+                  onChange={(e) => setEditReservationFee(e.target.value)}
+                />
+                <span className="text-[9px] text-gray-400 mt-1 block">
+                  Token reservation advance held in Escrow vault.
+                </span>
+              </div>
+
               <div className="border-t pt-3">
                 <span className="font-bold text-[10px] text-indigo-600 uppercase tracking-wider block mb-2">
                   Change Password (Optional)
@@ -453,6 +530,85 @@ export default function OwnerDashboard() {
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3 rounded-lg text-xs mt-6 transition-colors cursor-pointer shadow"
               >
                 {settingsLoading ? "Saving Settings..." : "Save Profile Settings"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT ROOM MODAL */}
+      {showEditRoomModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-gray-100 text-xs text-gray-900">
+            <div className="flex justify-between items-center border-b pb-2">
+              <h3 className="font-extrabold text-sm text-gray-950">
+                Edit {showEditRoomModal.sharingType} Sharing Room Details
+              </h3>
+              <button
+                onClick={() => setShowEditRoomModal(null)}
+                className="text-gray-400 hover:text-gray-600 text-lg font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveRoomDetails} className="space-y-4">
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">Monthly Room Rent (₹/mo)</label>
+                <input
+                  type="number"
+                  required
+                  className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none font-semibold text-xs font-mono"
+                  value={editRoomRent}
+                  onChange={(e) => setEditRoomRent(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">Beds Available</label>
+                <input
+                  type="number"
+                  required
+                  className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none font-semibold text-xs font-mono"
+                  value={editRoomBeds}
+                  onChange={(e) => setEditRoomBeds(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">Room Setup Image URL</label>
+                <input
+                  type="url"
+                  required
+                  placeholder="https://images.unsplash.com/photo-..."
+                  className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none text-xs"
+                  value={editRoomImageUrl}
+                  onChange={(e) => setEditRoomImageUrl(e.target.value)}
+                />
+                <span className="text-[9px] text-gray-400 mt-1 block leading-normal">
+                  Provide an image showing the bed setup, attachments, or ventilation of this specific room type.
+                </span>
+              </div>
+
+              {editRoomImageUrl && (
+                <div className="border rounded-lg overflow-hidden h-28 bg-gray-50 flex items-center justify-center relative">
+                  <img
+                    src={editRoomImageUrl}
+                    alt="Preview"
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80";
+                    }}
+                  />
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={roomSaving}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3 rounded-lg text-xs mt-6 transition-colors cursor-pointer shadow"
+              >
+                {roomSaving ? "Saving Room Details..." : "Save Room Details"}
               </button>
             </form>
           </div>

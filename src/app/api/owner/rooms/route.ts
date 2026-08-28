@@ -43,11 +43,11 @@ export async function PUT(request: Request) {
     }
 
     const session = JSON.parse(sessionCookie);
-    const { roomId, availableBeds } = await request.json();
+    const { roomId, availableBeds, priceMonthly, imageUrl } = await request.json();
 
-    if (!roomId || availableBeds === undefined) {
+    if (!roomId) {
       return NextResponse.json(
-        { error: "roomId and availableBeds count are required" },
+        { error: "roomId is required" },
         { status: 400 }
       );
     }
@@ -68,11 +68,21 @@ export async function PUT(request: Request) {
       );
     }
 
+    const updateData: any = {};
+    if (availableBeds !== undefined) {
+      updateData.availableBeds = parseInt(availableBeds);
+    }
+    if (priceMonthly !== undefined) {
+      updateData.priceMonthly = parseFloat(priceMonthly);
+    }
+    if (imageUrl !== undefined) {
+      updateData.imageUrl = imageUrl;
+      updateData.images = imageUrl; // Update primary images list
+    }
+
     const updatedRoom = await db.room.update({
       where: { id: roomId },
-      data: {
-        availableBeds: parseInt(availableBeds),
-      },
+      data: updateData,
     });
 
     return NextResponse.json({ success: true, room: updatedRoom });

@@ -13,7 +13,7 @@ export async function PUT(request: Request) {
     }
 
     const session = JSON.parse(sessionCookie);
-    const { name, phone, password } = await request.json();
+    const { name, phone, password, reservationFee } = await request.json();
 
     if (!name || !phone) {
       return NextResponse.json(
@@ -57,6 +57,17 @@ export async function PUT(request: Request) {
       }
       const { hashPassword } = await import("@/lib/auth");
       updateData.passwordHash = hashPassword(password);
+    }
+
+    // Update PG reservation fee if passed
+    if (reservationFee !== undefined) {
+      const parsedFee = parseFloat(reservationFee);
+      if (!isNaN(parsedFee) && parsedFee >= 0) {
+        await db.pg.updateMany({
+          where: { ownerId: session.id },
+          data: { reservationFee: parsedFee },
+        });
+      }
     }
 
     // Update DB
