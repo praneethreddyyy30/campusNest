@@ -75,9 +75,27 @@ function BookingTrackingContent({ id }: { id: string }) {
     }
   };
 
+  const paidParam = searchParams.get("paid") === "true";
+
   useEffect(() => {
     fetchBookingStatus();
   }, [id, phone]);
+
+  useEffect(() => {
+    if (booking && paidParam && typeof window !== "undefined") {
+      // Clear query param so it doesn't trigger on reload
+      const cleanUrl = window.location.pathname + `?phone=${encodeURIComponent(phone)}`;
+      window.history.replaceState({}, document.title, cleanUrl);
+
+      // Launch WhatsApp notification automatically
+      const pg = booking.room.pg;
+      const refCode = id.slice(0, 8).toUpperCase();
+      const landlordText = `Hi ${pg.owner.name}, I have reserved a bed at ${pg.name} (${booking.room.sharingType} sharing) via CampusNest. Ref: CN-${refCode}. Amount Paid: ₹${booking.amountPaid}. Please approve my booking by clicking here: ${origin}/owner/fast-approve?bookingId=${id}&phone=${pg.owner.phone}`;
+      
+      const whatsappUrl = `https://wa.me/91${pg.owner.phone}?text=${encodeURIComponent(landlordText)}`;
+      window.open(whatsappUrl, "_blank");
+    }
+  }, [booking, paidParam, id, phone, origin]);
 
   if (loading) {
     return (
