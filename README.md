@@ -16,15 +16,22 @@ CampusNest is a modern, responsive, mobile-first web platform tailored for stude
 ## 💡 2. The Solution Proposed
 *   **Proximity-Sorted Search:** Students search by entering their college name (e.g., *RGMCET*). PGs are automatically sorted and displayed by distance (in kilometers) from that college's main gate.
 *   **Swipeable Photo Galleries:** Listings feature dynamic cover carousels and room category modals showcasing verified pictures of washroom cleanliness, study desks, mess food, and bedroom settings.
-*   **Escrow Reservation Model:** To reserve a bed, students pay a **₹2,200** advance deposit:
-    *   **₹200** is collected as the platform service commission fee.
-    *   **₹2,000** is held securely in **escrow** by CampusNest.
-    *   The escrow is released to the landlord **24 hours after check-in** (deducted from the student's first month rent).
-    *   If the student is a "No-Show" past 48 hours of their check-in date, the ₹2,000 deposit is released to the owner as compensation.
-    *   If the room is fake or unavailable, the student receives a 100% refund.
-*   **Secure Payment Gateway Simulation:** Replaced manual UTR entry textboxes with a simulated **payment gateway checkout flow** matching Razorpay/PhonePe (supporting dynamic UPI QRs, card payments, and mock successful callbacks), preventing fake receipt scams.
-*   **Campus Ambassador Pipeline:** A dedicated portal `/partner` allows college ambassadors to submit details of new hostels. They can provide coordinates, list amenities, and upload room, washroom, and canteen photos. The admin can verify and publish these listings with a single click.
-*   **Admin-Moderated Q&As:** To prevent landlords and students from bypassing the platform, students post anonymous questions. The Admin Support team contacts the landlord to verify the details and publishes the FAQ answer publicly.
+*   **Escrow Reservation Model:** To reserve a bed, students pay a dynamic advance deposit (reservation fee + ₹200 platform service commission fee). The advance is held securely in **escrow** by CampusNest and released to the landlord 24 hours after check-in. If the student fails to show up, it is released to the owner as compensation.
+*   **Fraud-Proof UPI Intent Redirect & Segregated Auditing:**
+    *   **Direct UPI Redirects:** Students use deep-links that open PhonePe, Google Pay, or Paytm directly with the dynamic checkout amount pre-filled.
+    *   **12-Digit UTR Verification:** Students must input their 12-digit transaction UTR code. The reservation goes into a `Payment_Submitted` state, hiding it from the landlord.
+    *   **Segregated Admin Auditing:** Only the Super Admin (matching statement records at `93913333699`) sees the UTR field. Admin clicks "Verify Payment" to approve the transaction.
+    *   **Landlord Confirmation:** The landlord is notified only after admin verification, only having to click **Accept** or **Reject** to confirm the guest, with sensitive financial info hidden.
+*   **Boutique Visual Design & Dynamic Animations:**
+    *   **Scroll-Aware Floating Header:** The navigation bar shifts dynamically from a transparent overlay to a frosted-cream glass container on scroll.
+    *   **Slow Zoom Hero Banner:** Toggles subtle background animations on load.
+    *   **Popin-Inspired Filter Showcase:** Segment listings instantaneously client-side using filter capsules showing matching counts (e.g. *All Listings*, *Under 1.0 KM*, *Budget*).
+    *   **Auto-Playing Reviews Carousel:** Testimonial reviews slide automatically every 5 seconds.
+    *   **Interactive Counters:** Stats count up dynamically on load.
+*   **Ambassador & Landlord Edit Pipelines with Comparative Diffs:**
+    *   **Dynamic Inputs:** Ambassadors `/partner` and landlords `/owner/dashboard` submit listing updates with dynamic re-orderable photo queues, dynamic room configuration blocks (sharing types, rent, beds left), and optional custom amenities.
+    *   **Admin Comparative Diff Panel:** Super Admin compares proposed landlord modifications side-by-side on a comparative panel to approve or reject edits before going live.
+*   **Admin-Moderated Q&As:** Students post anonymous questions. The Admin Support team contacts the landlord to verify the details and publishes the FAQ answer publicly.
 *   **Float Support Widget:** A site-wide floating support button allows students, owners, and ambassadors to connect with our central operations hotline at any time.
 
 ---
@@ -192,10 +199,3 @@ To launch the project online for public access:
     *   Import the repository into [Vercel](https://vercel.com/).
     *   Add your Supabase database connection variables (`DATABASE_URL`, `DIRECT_URL`) under the **Environment Variables** section on Vercel.
     *   Click **Deploy**. Vercel will build the project and output a live public URL.
-"# CampusNest" 
-"# CampusNest" 
-"# CampusNest" 
-"# CampusNest" 
-"# CampusNest" 
-"# CampusNest" 
-"# CampusNest" 
