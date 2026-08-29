@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { name, address, description, collegeId, ownerId, ownerName, ownerPhone, distanceKm, amenities, imageUrl, images, reservationFee } = await request.json();
+    const { name, address, description, collegeId, ownerId, ownerName, ownerPhone, distanceKm, amenities, imageUrl, images, reservationFee, sharingTypes } = await request.json();
 
     if (!name || !address || !collegeId || !ownerId || !distanceKm) {
       return NextResponse.json(
@@ -82,29 +82,51 @@ export async function POST(request: Request) {
       },
     });
 
-    // Create default double sharing and triple sharing rooms for the PG so it is instantly live & bookable!
-    await db.room.createMany({
-      data: [
-        {
-          pgId: pg.id,
-          sharingType: "Double",
-          priceMonthly: 5000,
-          genderPreference: "Boys",
-          availableBeds: 4,
-          imageUrl: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=600&q=80",
-          images: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=600&q=80,https://images.unsplash.com/photo-1584622781564-1d987f7333c1?auto=format&fit=crop&w=600&q=80",
-        },
-        {
-          pgId: pg.id,
-          sharingType: "Triple",
-          priceMonthly: 4200,
-          genderPreference: "Boys",
-          availableBeds: 6,
-          imageUrl: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=600&q=80",
-          images: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=600&q=80,https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80",
+    // Create rooms for the PG based on custom sharing types list or defaults
+    if (sharingTypes && typeof sharingTypes === "string" && sharingTypes.trim().startsWith("[")) {
+      try {
+        const customRoomsList = JSON.parse(sharingTypes);
+        if (Array.isArray(customRoomsList) && customRoomsList.length > 0) {
+          await db.room.createMany({
+            data: customRoomsList.map((r: any) => ({
+              pgId: pg.id,
+              sharingType: r.sharingType,
+              priceMonthly: parseFloat(r.priceMonthly) || 5000,
+              genderPreference: "Boys",
+              availableBeds: parseInt(r.availableBeds) || 2,
+              imageUrl: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=600&q=80",
+              images: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=600&q=80,https://images.unsplash.com/photo-1584622781564-1d987f7333c1?auto=format&fit=crop&w=600&q=80",
+            }))
+          });
         }
-      ]
-    });
+      } catch (err) {
+        console.error("Failed to parse custom rooms JSON list:", err);
+      }
+    } else {
+      // Create default double sharing and triple sharing rooms for the PG so it is instantly live & bookable!
+      await db.room.createMany({
+        data: [
+          {
+            pgId: pg.id,
+            sharingType: "Double",
+            priceMonthly: 5000,
+            genderPreference: "Boys",
+            availableBeds: 4,
+            imageUrl: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=600&q=80",
+            images: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=600&q=80,https://images.unsplash.com/photo-1584622781564-1d987f7333c1?auto=format&fit=crop&w=600&q=80",
+          },
+          {
+            pgId: pg.id,
+            sharingType: "Triple",
+            priceMonthly: 4200,
+            genderPreference: "Boys",
+            availableBeds: 6,
+            imageUrl: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=600&q=80",
+            images: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=600&q=80,https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80",
+          }
+        ]
+      });
+    }
 
     return NextResponse.json({ success: true, pg });
   } catch (error) {

@@ -9,10 +9,12 @@ export async function GET(request: Request) {
     const sharing = searchParams.get("sharing") || ""; // "Single", "Double", "Triple"
     const maxPriceVal = searchParams.get("maxPrice");
     const maxPrice = maxPriceVal ? parseFloat(maxPriceVal) : NaN;
+    const amenity = searchParams.get("amenity") || "";
+    const query = searchParams.get("query") || "";
 
-    if (!collegeId) {
+    if (!collegeId && !query) {
       return NextResponse.json(
-        { error: "collegeId parameter is required" },
+        { error: "Either collegeId or query parameter is required" },
         { status: 400 }
       );
     }
@@ -29,15 +31,31 @@ export async function GET(request: Request) {
       roomFilter.priceMonthly = { lte: maxPrice };
     }
 
-    // Fetch PGs near the college, including their rooms matching the criteria
-    const pgs = await db.pg.findMany({
-      where: {
-        collegeId: collegeId,
-        // Only return PGs that have rooms matching our filter
-        rooms: {
-          some: roomFilter,
-        },
+    const whereClause: any = {
+      rooms: {
+        some: roomFilter,
       },
+    };
+
+    if (collegeId && collegeId !== "SEARCH_BY_NAME") {
+      whereClause.collegeId = collegeId;
+    }
+
+    if (query) {
+      whereClause.name = {
+        contains: query,
+      };
+    }
+
+    if (amenity) {
+      whereClause.amenities = {
+        contains: amenity,
+      };
+    }
+
+    // Fetch PGs, including their rooms matching the criteria
+    const pgs = await db.pg.findMany({
+      where: whereClause,
       include: {
         rooms: {
           where: roomFilter,
@@ -45,7 +63,7 @@ export async function GET(request: Request) {
         },
       },
       orderBy: {
-        distanceKm: "asc", // Sort by proximity!
+        distanceKm: "asc", // Sort by proximity
       },
     });
 

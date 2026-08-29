@@ -192,3 +192,10 @@ To launch the project online for public access:
     *   Import the repository into [Vercel](https://vercel.com/).
     *   Add your Supabase database connection variables (`DATABASE_URL`, `DIRECT_URL`) under the **Environment Variables** section on Vercel.
     *   Click **Deploy**. Vercel will build the project and output a live public URL.
+"# CampusNest" 
+"# CampusNest" 
+"# CampusNest" 
+"# CampusNest" 
+"# CampusNest" 
+"# CampusNest" 
+"# CampusNest" 

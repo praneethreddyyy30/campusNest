@@ -44,6 +44,15 @@ model Pg {
   images      String?  // Comma-separated list of image URLs (building, washroom, mess, study)
   viewCount   Int      @default(0) // Platform traffic view analytics
   reservationFee Float @default(2000) // Landlord-defined escrow advance booking amount
+  pendingName           String?
+  pendingAddress        String?
+  pendingDescription    String?
+  pendingDistanceKm     Float?
+  pendingAmenities      String?
+  pendingImageUrl       String?
+  pendingImages         String?
+  pendingReservationFee Float?
+  hasPendingUpdates     Boolean @default(false)
   rooms       Room[]
   queries     Query[]
   reviews     Review[]

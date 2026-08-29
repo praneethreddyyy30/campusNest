@@ -15,8 +15,12 @@ export async function GET(request: Request) {
     // Case 1: Student Lookup (Guest mode)
     if (bookingId || phone) {
       if (bookingId && phone) {
-        const booking = await db.booking.findUnique({
-          where: { id: bookingId },
+        const booking = await db.booking.findFirst({
+          where: {
+            id: {
+              startsWith: bookingId,
+            },
+          },
           include: {
             room: {
               include: {
@@ -82,8 +86,12 @@ export async function GET(request: Request) {
       }
 
       if (bookingId) {
-        const booking = await db.booking.findUnique({
-          where: { id: bookingId },
+        const booking = await db.booking.findFirst({
+          where: {
+            id: {
+              startsWith: bookingId,
+            },
+          },
           include: {
             room: {
               include: {
@@ -251,7 +259,7 @@ export async function PUT(request: Request) {
     }
 
     const session = JSON.parse(sessionCookie);
-    const { bookingId, status } = await request.json(); // status: "Approved" | "Rejected" | "No-Show"
+    const { bookingId, status } = await request.json(); // status: "Pending" | "Approved" | "Rejected" | "No-Show"
 
     if (!bookingId || !status) {
       return NextResponse.json(

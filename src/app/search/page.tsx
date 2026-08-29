@@ -3,6 +3,17 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { 
+  MapPin, 
+  Star, 
+  ShieldAlert, 
+  Loader2, 
+  SlidersHorizontal,
+  ChevronRight, 
+  RotateCcw,
+  Sparkles,
+  Check
+} from "lucide-react";
 
 interface Room {
   id: string;
@@ -39,31 +50,49 @@ function SearchContent() {
   const [loading, setLoading] = useState(true);
 
   // Filters State
-  const [gender, setGender] = useState("");
-  const [sharing, setSharing] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
+  const [gender, setGender] = useState(searchParams.get("gender") || "");
+  const [sharing, setSharing] = useState(searchParams.get("sharing") || "");
+  const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") || "");
+  const [amenity, setAmenity] = useState(searchParams.get("amenity") || "");
 
-  // Resolve typed college queries (e.g. from Enter button submit)
+  // Local search college list if no college selected
+  const [localSearchTerm, setLocalSearchTerm] = useState("");
+  const [localColleges, setLocalColleges] = useState<any[]>([]);
+  const [showLocalSuggestions, setShowLocalSuggestions] = useState(false);
+
+  // Resolve typed college queries
   useEffect(() => {
     const resolveCollege = async () => {
       if (collegeId || !queryText) return;
       setLoading(true);
       setResolveError("");
       try {
+        // First try to find college
         const res = await fetch(`/api/colleges/search?query=${encodeURIComponent(queryText)}`);
         if (res.ok) {
           const list = await res.json();
           if (list.length > 0) {
             setCollegeId(list[0].id);
             setCollegeName(list[0].name);
-          } else {
-            setResolveError(`No colleges found matching "${queryText}"`);
-            setLoading(false);
+            return;
           }
-        } else {
-          setResolveError("Failed to search colleges.");
-          setLoading(false);
         }
+
+        // Fallback: search by PG name directly
+        const pgRes = await fetch(`/api/pgs/search?query=${encodeURIComponent(queryText)}`);
+        if (pgRes.ok) {
+          const pgData = await pgRes.json();
+          if (pgData.length > 0) {
+            setPgs(pgData);
+            setCollegeName(`"${queryText}"`);
+            setCollegeId("SEARCH_BY_NAME");
+            setLoading(false);
+            return;
+          }
+        }
+
+        setResolveError(`No colleges or hostels found matching "${queryText}"`);
+        setLoading(false);
       } catch (err) {
         setResolveError("Something went wrong during search.");
         setLoading(false);
@@ -72,14 +101,40 @@ function SearchContent() {
     resolveCollege();
   }, [queryText, collegeId]);
 
+  // Local college search
+  useEffect(() => {
+    if (localSearchTerm.trim() === "") {
+      setLocalColleges([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/colleges/search?query=${encodeURIComponent(localSearchTerm)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setLocalColleges(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch colleges:", err);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [localSearchTerm]);
+
   const fetchFilteredPgs = async () => {
     if (!collegeId) return;
     setLoading(true);
     try {
-      let url = `/api/pgs/search?collegeId=${collegeId}`;
+      let url = `/api/pgs/search?`;
+      if (collegeId === "SEARCH_BY_NAME") {
+        url += `query=${encodeURIComponent(queryText)}`;
+      } else {
+        url += `collegeId=${collegeId}`;
+      }
       if (gender) url += `&gender=${gender}`;
       if (sharing) url += `&sharing=${sharing}`;
       if (maxPrice) url += `&maxPrice=${maxPrice}`;
+      if (amenity) url += `&amenity=${amenity}`;
 
       const res = await fetch(url);
       if (res.ok) {
@@ -95,54 +150,129 @@ function SearchContent() {
 
   useEffect(() => {
     fetchFilteredPgs();
-  }, [collegeId, gender, sharing, maxPrice]);
+  }, [collegeId, gender, sharing, maxPrice, amenity]);
 
   if (!collegeId) {
     return (
-      <div className="max-w-4xl mx-auto py-12 px-4 text-center">
-        <h2 className="text-xl font-semibold text-gray-800">
-          {resolveError || "No college selected."}
-        </h2>
-        <p className="text-gray-500 mt-2">
-          {resolveError
-            ? "Please check your spelling and search again."
-            : "Please go back to home page and search by college name."}
-        </p>
-        <Link
-          href="/"
-          className="mt-4 inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-md transition-colors"
-        >
-          Go Home
-        </Link>
+      <div className="max-w-xl mx-auto py-24 px-4 text-center space-y-6">
+        <div className="w-16 h-16 rounded-full bg-beige/30 flex items-center justify-center mx-auto text-midnight">
+          <ShieldAlert className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-sans font-bold text-midnight">
+            {resolveError || "No College Selected"}
+          </h2>
+          <p className="text-xs sm:text-sm text-midnight/60 leading-relaxed max-w-sm mx-auto">
+            {resolveError
+              ? "We couldn't resolve the college location. Please review your query and search again."
+              : "To view local PG outskirts listings, please search for your college below."}
+          </p>
+        </div>
+
+        {/* Dynamic college search bar */}
+        <div className="relative max-w-md mx-auto w-full pt-4">
+          <div className="bg-white border border-beige/40 p-2 rounded-xl flex items-center h-14 w-full shadow-sm">
+            <div className="flex items-center gap-2 px-2 flex-grow text-left h-full">
+              <MapPin className="w-4 h-4 text-midnight opacity-75 shrink-0" />
+              <input
+                type="text"
+                placeholder="Enter college name (e.g. RGMCET, GPREC)..."
+                className="w-full bg-transparent text-midnight focus:outline-none placeholder:text-midnight/50 font-medium text-sm h-full"
+                value={localSearchTerm}
+                onChange={(e) => {
+                  setLocalSearchTerm(e.target.value);
+                  setShowLocalSuggestions(true);
+                }}
+                onFocus={() => setShowLocalSuggestions(true)}
+              />
+            </div>
+          </div>
+
+          {/* Suggestions Dropdown */}
+          {showLocalSuggestions && localColleges.length > 0 && (
+            <div className="absolute z-50 left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-beige/40 divide-y divide-beige/25 overflow-hidden max-h-48 overflow-y-auto">
+              {localColleges.map((college) => (
+                <button
+                  key={college.id}
+                  type="button"
+                  className="w-full text-left px-4 py-3 hover:bg-beige/10 text-midnight flex flex-col cursor-pointer transition-colors"
+                  onClick={() => {
+                    setCollegeId(college.id);
+                    setCollegeName(college.name);
+                    setShowLocalSuggestions(false);
+                    router.replace(`/search?collegeId=${college.id}&collegeName=${encodeURIComponent(college.name)}`);
+                  }}
+                >
+                  <span className="font-semibold text-xs text-left">{college.name}</span>
+                  <span className="text-[10px] text-left text-midnight/50 mt-0.5">
+                    {college.city}, {college.state}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="pt-4">
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center bg-white border border-beige/45 hover:bg-beige/10 text-midnight font-bold text-xs px-6 py-3 rounded-xl transition-all shadow-xs cursor-pointer"
+          >
+            Go Home
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
+      
       {/* Header */}
-      <div className="border-b pb-6 mb-8">
-        <span className="text-sm text-gray-500 font-semibold tracking-wider uppercase">
-          Search Results
-        </span>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1">
-          PGs near {collegeName}
-        </h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Found {pgs.length} verified accommodations sorted by proximity
-        </p>
+      <div className="border-b border-beige/30 pb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <div className="space-y-1">
+          <span className="text-[10px] text-midnight/55 uppercase font-bold tracking-widest block">
+            Search Results
+          </span>
+          <h1 className="text-3xl font-sans font-bold text-midnight">
+            {collegeId === "SEARCH_BY_NAME" ? `Accommodations matching ${collegeName}` : `Accommodations near ${collegeName}`}
+          </h1>
+          <p className="text-xs sm:text-sm text-midnight/60 font-sans">
+            {collegeId === "SEARCH_BY_NAME" ? `Found ${pgs.length} verified listings` : `Found ${pgs.length} verified outskirts PGs sorted by proximity to gate`}
+          </p>
+        </div>
+        
+        {/* Active Filters Summary */}
+        {(gender || sharing || maxPrice || amenity) && (
+          <button
+            onClick={() => {
+              setGender("");
+              setSharing("");
+              setMaxPrice("");
+              setAmenity("");
+            }}
+            className="flex items-center gap-1.5 text-xs text-red-700 font-bold bg-red-50 hover:bg-red-100 border border-red-200 px-3.5 py-2 rounded-xl transition-colors cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Reset Filters</span>
+          </button>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Filters Panel */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border h-fit space-y-6">
-          <h2 className="font-bold text-gray-950 text-lg border-b pb-2">Filter By</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+        
+        {/* Filters Sidebar */}
+        <div className="bg-white p-8 rounded-2xl border border-beige/40 shadow-sm space-y-6">
+          <div className="flex items-center gap-2 border-b border-beige/35 pb-4">
+            <SlidersHorizontal className="w-4 h-4 text-midnight/80" />
+            <h2 className="font-bold text-midnight text-sm tracking-wide">Filter Accommodation</h2>
+          </div>
 
           {/* Gender */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700">Gender preference</label>
+            <label className="text-xs font-bold text-midnight/70 uppercase tracking-wider block">Gender Preference</label>
             <select
-              className="w-full bg-gray-50 border rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer font-medium"
+              className="w-full bg-beige/10 border border-beige/40 rounded-xl px-3 py-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight cursor-pointer font-semibold"
               value={gender}
               onChange={(e) => setGender(e.target.value)}
             >
@@ -155,9 +285,9 @@ function SearchContent() {
 
           {/* Sharing Type */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700">Room Sharing</label>
+            <label className="text-xs font-bold text-midnight/70 uppercase tracking-wider block">Room Sharing</label>
             <select
-              className="w-full bg-gray-50 border rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer font-medium"
+              className="w-full bg-beige/10 border border-beige/40 rounded-xl px-3 py-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight cursor-pointer font-semibold"
               value={sharing}
               onChange={(e) => setSharing(e.target.value)}
             >
@@ -170,144 +300,122 @@ function SearchContent() {
 
           {/* Max Price */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700">Max Budget (Monthly)</label>
+            <label className="text-xs font-bold text-midnight/70 uppercase tracking-wider block">Max Budget (Monthly)</label>
             <div className="relative">
-              <span className="absolute left-3 top-2 text-gray-400 text-sm">₹</span>
+              <span className="absolute left-4 top-[13px] text-midnight/60 text-xs font-bold">₹</span>
               <input
                 type="number"
                 placeholder="e.g. 6000"
-                className="w-full bg-gray-50 border rounded-md p-2 pl-7 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                className="w-full bg-beige/10 border border-beige/40 rounded-xl pl-8 pr-4 py-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight font-semibold"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
               />
             </div>
           </div>
 
-          {/* Clear Filters */}
-          {(gender || sharing || maxPrice) && (
-            <button
-              onClick={() => {
-                setGender("");
-                setSharing("");
-                setMaxPrice("");
-              }}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold py-2 rounded-md transition-colors cursor-pointer"
+          {/* Special Amenities */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-midnight/70 uppercase tracking-wider block">Special Amenities</label>
+            <select
+              className="w-full bg-beige/10 border border-beige/40 rounded-xl px-3 py-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight cursor-pointer font-semibold"
+              value={amenity}
+              onChange={(e) => setAmenity(e.target.value)}
             >
-              Clear All Filters
-            </button>
-          )}
+              <option value="">Any Amenity</option>
+              <option value="Meals">Meals Included</option>
+              <option value="AC">Air Conditioning</option>
+              <option value="WiFi">WiFi Enabled</option>
+              <option value="PowerBackup">Power Backup</option>
+              <option value="Laundry">Washing Machine</option>
+              <option value="Security">Security Guard</option>
+            </select>
+          </div>
         </div>
 
         {/* Listings Grid */}
         <div className="lg:col-span-3">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 space-y-3">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-              <p className="text-gray-500 text-sm font-medium">Searching nearby accommodations...</p>
+            <div className="flex flex-col items-center justify-center py-24 space-y-4">
+              <Loader2 className="animate-spin w-8 h-8 text-midnight/60" />
+              <p className="text-xs text-midnight/60 font-semibold tracking-wide">Searching nearby accommodations...</p>
             </div>
           ) : pgs.length === 0 ? (
-            <div className="bg-white border rounded-lg p-12 text-center shadow-sm">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-12 h-12 text-gray-300 mx-auto"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M2.25 21h19.5m-18-10.5h16.5m-16.5 3h16.5m-16.5 3h16.5M6.75 6.75h.75m-.75 3h.75m3-3h.75m-.75 3h.75m3-3h.75m-.75 3h.75M21 21V6.75A2.25 2.25 0 0018.75 4.5H5.25A2.25 2.25 0 003 6.75V21M9 9h.008v.008H9V9zm.5 0a.5.5 0 11-1 0 .5.5 0 011 0zM12 9h.008v.008H12V9zm.5 0a.5.5 0 11-1 0 .5.5 0 011 0zm2.5 0h.008v.008H15V9zm.5 0a.5.5 0 11-1 0 .5.5 0 011 0z"
-                />
-              </svg>
-              <h3 className="text-lg font-bold text-gray-800 mt-4">No matching PGs found</h3>
-              <p className="text-gray-500 text-sm mt-1 max-w-sm mx-auto">
-                Try widening your price range or clearing filters to find more rooms near the campus outskirts.
-              </p>
+            <div className="bg-white border border-beige/40 rounded-2xl p-16 text-center shadow-sm max-w-xl mx-auto space-y-4">
+              <ShieldAlert className="w-12 h-12 text-midnight/35 mx-auto" />
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold text-midnight">No matching PGs found</h3>
+                <p className="text-xs text-midnight/60 leading-relaxed max-w-xs mx-auto">
+                  Try widening your budget, resetting sharing preferences, or exploring other campus outskirts.
+                </p>
+              </div>
+              {(gender || sharing || maxPrice || amenity) && (
+                <button
+                  onClick={() => {
+                    setGender("");
+                    setSharing("");
+                    setMaxPrice("");
+                    setAmenity("");
+                  }}
+                  className="bg-midnight hover:bg-midnight-light text-pearl font-bold text-xs px-5 py-2.5 rounded-lg transition-colors cursor-pointer"
+                >
+                  Clear Filters
+                </button>
+              )}
             </div>
           ) : (
-            <div className="space-y-4">
-              {pgs.map((pg) => {
-                // Find starting price
+            <div className="space-y-6">
+              {pgs.map((pg, index) => {
                 const startingPrice = pg.rooms.length > 0 
                   ? Math.min(...pg.rooms.map((r) => r.priceMonthly))
-                  : 0;
+                  : 6000;
+
+                // Alternate images
+                const imageMap = ["/exterior.jpg", "/room-1.jpg", "/room-2.jpg"];
+                const coverImg = pg.imageUrl || imageMap[index % imageMap.length];
 
                 return (
                   <div
                     key={pg.id}
-                    className="bg-white border rounded-xl overflow-hidden hover:shadow-md transition-shadow p-6 flex flex-col md:flex-row gap-6"
+                    className="bg-white border border-beige/40 rounded-2xl overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 p-6 flex flex-col md:flex-row gap-6"
                   >
-                    {/* PG Cover Image */}
-                    <div className="w-full md:w-48 h-36 bg-gray-100 rounded-lg overflow-hidden border shrink-0">
-                      {pg.imageUrl ? (
-                        <img
-                          src={pg.imageUrl}
-                          alt={pg.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-indigo-400 bg-indigo-50">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="w-12 h-12"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
-                            />
-                          </svg>
-                        </div>
+                    {/* Cover Image */}
+                    <div className="w-full md:w-52 h-40 bg-beige/10 rounded-xl overflow-hidden shrink-0 relative">
+                      <img
+                        src={coverImg}
+                        alt={pg.name}
+                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                      />
+                      {pg.isVerified && (
+                        <span className="absolute top-3 left-3 bg-emerald-600/90 backdrop-blur-xs text-white text-[8px] font-bold uppercase px-2.5 py-1 rounded-full tracking-wider flex items-center gap-1 shadow-sm">
+                          <Check className="w-2.5 h-2.5 text-white stroke-[3px]" />
+                          <span>Verified PG</span>
+                        </span>
                       )}
                     </div>
 
                     {/* Content */}
-                    <div className="flex-grow flex flex-col justify-between">
+                    <div className="flex-grow flex flex-col justify-between space-y-4">
                       <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-extrabold text-lg text-gray-900 leading-tight">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <h3 className="font-bold text-base text-midnight leading-tight">
                             {pg.name}
                           </h3>
-                          {pg.isVerified && (
-                            <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-xs px-2 py-0.5 rounded-full font-bold border border-green-200">
-                              Verified
-                            </span>
-                          )}
+                          <div className="flex items-center gap-1.5 text-[10px] text-emerald-800 font-bold bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-xl w-fit">
+                            <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>{pg.distanceKm} km from college gate</span>
+                          </div>
                         </div>
 
-                        {/* Proximity Distance */}
-                        <div className="flex items-center gap-1.5 text-xs text-indigo-600 font-semibold bg-indigo-50 px-2 py-1 rounded w-fit">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            className="w-3.5 h-3.5"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9.5a7 7 0 10-14 0c0 2.992 1.698 5.487 3.363 7.126.83.799 1.654 1.381 2.273 1.765a8.736 8.736 0 001.038.573l.018.008.006.003zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                          <span>{pg.distanceKm} km from college gate</span>
-                        </div>
-
-                        <p className="text-gray-500 text-sm line-clamp-2 mt-2 leading-relaxed">
+                        <p className="text-midnight/70 text-xs line-clamp-2 leading-relaxed">
                           {pg.description}
                         </p>
 
-                        {/* Amenities Tags */}
-                        <div className="flex flex-wrap gap-1 pt-2">
+                        {/* Amenities */}
+                        <div className="flex flex-wrap gap-1.5 pt-2">
                           {pg.amenities.split(",").map((amenity, idx) => (
                             <span
                               key={idx}
-                              className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded"
+                              className="text-[9px] font-bold bg-beige/15 border border-beige/30 text-midnight/70 px-2 py-0.5 rounded"
                             >
                               {amenity.trim()}
                             </span>
@@ -316,19 +424,20 @@ function SearchContent() {
                       </div>
 
                       {/* Pricing and Action */}
-                      <div className="flex items-center justify-between border-t pt-4 mt-4">
+                      <div className="flex items-center justify-between border-t border-beige/20 pt-4">
                         <div>
-                          <span className="text-xs text-gray-500">Starting from</span>
-                          <p className="text-lg font-bold text-gray-900">
+                          <span className="text-[9px] text-midnight/55 uppercase font-bold tracking-wider block">Starts from</span>
+                          <p className="text-lg font-extrabold text-midnight">
                             ₹{startingPrice}
-                            <span className="text-xs text-gray-400 font-normal"> / month</span>
+                            <span className="text-xs text-midnight/50 font-normal"> / month</span>
                           </p>
                         </div>
                         <Link
                           href={`/pgs/${pg.id}`}
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-4 py-2 rounded-md shadow-sm transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 bg-midnight hover:bg-midnight-light text-pearl font-bold text-xs px-5 py-3 rounded-lg transition-colors cursor-pointer"
                         >
-                          View Rooms
+                          <span>View Rooms</span>
+                          <ChevronRight className="w-3 h-3" />
                         </Link>
                       </div>
                     </div>
@@ -345,15 +454,17 @@ function SearchContent() {
 
 export default function SearchPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-          <p className="text-gray-500 text-sm font-medium mt-2">Loading search environment...</p>
-        </div>
-      }
-    >
-      <SearchContent />
-    </Suspense>
+    <div className="min-h-screen bg-pearl">
+      <Suspense
+        fallback={
+          <div className="flex flex-col items-center justify-center py-32 space-y-4">
+            <Loader2 className="animate-spin w-8 h-8 text-midnight/60" />
+            <p className="text-xs text-midnight/60 font-semibold tracking-wide">Loading search environment...</p>
+          </div>
+        }
+      >
+        <SearchContent />
+      </Suspense>
+    </div>
   );
 }

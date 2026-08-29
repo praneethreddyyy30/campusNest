@@ -2,6 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { 
+  Building, 
+  Wallet, 
+  MessageSquare, 
+  FileText, 
+  Users, 
+  Plus, 
+  Trash2, 
+  Edit, 
+  Check, 
+  X, 
+  Search, 
+  Filter, 
+  Activity, 
+  Loader2, 
+  LogOut, 
+  ShieldAlert, 
+  Eye, 
+  Lock,
+  ArrowRight
+} from "lucide-react";
 
 interface Query {
   id: string;
@@ -187,6 +208,28 @@ export default function AdminPortal() {
     }
   };
 
+  const handleApproveRejectUpdates = async (pgId: string, action: "approve" | "reject") => {
+    setSubmitLoading(true);
+    try {
+      const res = await fetch("/api/admin/pgs/approve-updates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pgId, action }),
+      });
+      if (res.ok) {
+        alert(action === "approve" ? "Updates approved and published live!" : "Proposed landlord edits discarded.");
+        fetchAdminData();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to process updates");
+      }
+    } catch (err) {
+      alert("Error processing updates");
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
   // Create PG Submission
   const handleCreatePg = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -290,14 +333,13 @@ export default function AdminPortal() {
     }
   };
 
-  // Approve Lead / Ambassador form submission and automatically register
+  // Approve Lead
   const handleApproveLead = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!showApproveLeadModal) return;
     setSubmitLoading(true);
 
     try {
-      // Step 1: Create the PG using CRUD API
       const res = await fetch("/api/admin/pgs/crud", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -313,11 +355,11 @@ export default function AdminPortal() {
           amenities: showApproveLeadModal.amenities || "WiFi, Meals, RO Water, Security",
           imageUrl: showApproveLeadModal.imageUrl || "",
           images: showApproveLeadModal.images || "",
+          sharingTypes: showApproveLeadModal.sharingTypes,
         }),
       });
 
       if (res.ok) {
-        // Step 2: Update PgFormSubmission status to Approved
         await fetch("/api/partner", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -401,9 +443,9 @@ export default function AdminPortal() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 space-y-3">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-        <p className="text-gray-500 text-sm font-medium">Loading Operations Console...</p>
+      <div className="flex flex-col items-center justify-center py-32 space-y-4 bg-pearl min-h-screen">
+        <Loader2 className="animate-spin w-8 h-8 text-midnight/60" />
+        <p className="text-xs text-midnight/60 font-semibold tracking-wide">Loading Operations Console...</p>
       </div>
     );
   }
@@ -414,19 +456,21 @@ export default function AdminPortal() {
   const totalApproved = bookings.filter(b => b.status === "Approved").length;
   const totalQueriesPending = queries.filter(q => q.status === "Pending").length;
   const totalLeadsPending = leads.filter(l => l.status === "Pending").length;
+  const totalPendingUpdates = pgs.filter(p => p.hasPendingUpdates).length;
   const totalEscrowHeld = totalApproved * 2000;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in text-gray-900">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8 bg-pearl font-sans text-midnight">
+      
       {/* Page Header */}
-      <div className="bg-white border rounded-xl p-6 shadow-sm flex justify-between items-center flex-wrap gap-4">
+      <div className="bg-white border border-beige/40 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <span className="text-xs text-indigo-600 font-extrabold uppercase tracking-wider">
+          <span className="text-[10px] text-midnight/55 uppercase font-bold tracking-widest block">
             Super Admin Console
           </span>
-          <h1 className="text-2xl font-black text-gray-900">CampusNest Operations Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Monitor registered properties, manage escrow advances, process ambassador forms, and moderate student Q&As.
+          <h1 className="text-3xl font-sans font-bold text-midnight mt-0.5">CampusNest Operations</h1>
+          <p className="text-xs text-midnight/60 font-sans mt-0.5">
+            Monitor registered properties, verify escrow transactions, moderate student Q&As, and review ambassador submissions.
           </p>
         </div>
         <div>
@@ -436,160 +480,192 @@ export default function AdminPortal() {
               router.push("/");
               router.refresh();
             }}
-            className="bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 font-extrabold text-xs py-2 px-4 rounded border border-red-200 cursor-pointer transition-colors"
+            className="inline-flex items-center justify-center bg-red-50 hover:bg-red-100 border border-red-200 text-red-750 font-bold text-xs px-5 py-3 rounded-xl transition-all shadow-xs cursor-pointer uppercase tracking-wider gap-1.5"
           >
-            Logout
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Logout</span>
           </button>
         </div>
       </div>
 
       {/* Tabs Navigation */}
-      <div className="flex border-b border-gray-200 overflow-x-auto gap-2">
+      <div className="flex border-b border-beige/35 overflow-x-auto gap-2">
         <button
           onClick={() => setActiveTab("overview")}
-          className={`py-3 px-5 text-sm font-extrabold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+          className={`py-3.5 px-5 text-xs font-bold border-b-2 whitespace-nowrap transition-all cursor-pointer uppercase tracking-wider flex items-center gap-1.5 ${
             activeTab === "overview"
-              ? "border-indigo-600 text-indigo-600 font-bold"
-              : "border-transparent text-gray-500 hover:text-gray-700"
+              ? "border-midnight text-midnight font-bold"
+              : "border-transparent text-midnight/55 hover:text-midnight"
           }`}
         >
-          📁 PG Hostels Directory ({pgs.length})
+          <Building className="w-4 h-4" />
+          <span>PG Hostels ({pgs.length})</span>
         </button>
+        
         <button
           onClick={() => setActiveTab("transactions")}
-          className={`py-3 px-5 text-sm font-extrabold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+          className={`py-3.5 px-5 text-xs font-bold border-b-2 whitespace-nowrap transition-all cursor-pointer uppercase tracking-wider flex items-center gap-1.5 ${
             activeTab === "transactions"
-              ? "border-indigo-600 text-indigo-600 font-bold"
-              : "border-transparent text-gray-500 hover:text-gray-700"
+              ? "border-midnight text-midnight font-bold"
+              : "border-transparent text-midnight/55 hover:text-midnight"
           }`}
         >
-          💸 Verify Transactions ({bookings.length})
+          <Wallet className="w-4 h-4" />
+          <span>Verify Transactions ({bookings.length})</span>
         </button>
+        
         <button
           onClick={() => setActiveTab("queries")}
-          className={`py-3 px-5 text-sm font-extrabold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+          className={`py-3.5 px-5 text-xs font-bold border-b-2 whitespace-nowrap transition-all cursor-pointer uppercase tracking-wider flex items-center gap-1.5 ${
             activeTab === "queries"
-              ? "border-indigo-600 text-indigo-600 font-bold"
-              : "border-transparent text-gray-500 hover:text-gray-700"
+              ? "border-midnight text-midnight font-bold"
+              : "border-transparent text-midnight/55 hover:text-midnight"
           }`}
         >
-          💬 Moderation Q&A ({totalQueriesPending} Pending)
+          <MessageSquare className="w-4 h-4" />
+          <span>Moderation Q&A ({totalQueriesPending})</span>
         </button>
+        
         <button
           onClick={() => setActiveTab("leads")}
-          className={`py-3 px-5 text-sm font-extrabold border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+          className={`py-3.5 px-5 text-xs font-bold border-b-2 whitespace-nowrap transition-all cursor-pointer uppercase tracking-wider flex items-center gap-1.5 ${
             activeTab === "leads"
-              ? "border-indigo-600 text-indigo-600 font-bold"
-              : "border-transparent text-gray-500 hover:text-gray-700"
+              ? "border-midnight text-midnight font-bold"
+              : "border-transparent text-midnight/55 hover:text-midnight"
           }`}
         >
-          📋 Ambassador Submissions ({totalLeadsPending} Pending)
+          <FileText className="w-4 h-4" />
+          <span>Ambassador Leads ({totalLeadsPending})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("updates")}
+          className={`py-3.5 px-5 text-xs font-bold border-b-2 whitespace-nowrap transition-all cursor-pointer uppercase tracking-wider flex items-center gap-1.5 ${
+            activeTab === "updates"
+              ? "border-midnight text-midnight font-bold"
+              : "border-transparent text-midnight/55 hover:text-midnight"
+          }`}
+        >
+          <Activity className="w-4 h-4" />
+          <span>Landlord Edits ({totalPendingUpdates})</span>
         </button>
       </div>
 
       {/* Tab Contents */}
       {activeTab === "overview" && (
         <div className="space-y-8">
+          
           {/* Analytics Summary */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white border rounded-xl p-5 shadow-sm space-y-1">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Total Hostels</span>
-              <p className="text-2xl font-black text-indigo-600">{pgs.length}</p>
-              <span className="text-[10px] text-gray-400 block font-medium">Live on CampusNest</span>
+            
+            <div className="bg-white border border-beige/40 rounded-2xl p-6 shadow-sm space-y-2">
+              <span className="text-[9px] font-bold text-midnight/50 uppercase tracking-wider block">Total Hostels</span>
+              <p className="text-3xl font-sans font-bold text-midnight">{pgs.length}</p>
+              <span className="text-[9px] text-midnight/50 block font-sans">Live on map directory</span>
             </div>
-            <div className="bg-white border rounded-xl p-5 shadow-sm space-y-1">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Total Live Vacancies</span>
-              <p className="text-2xl font-black text-green-600">{totalBedsLive}</p>
-              <span className="text-[10px] text-gray-400 block font-medium">Beds ready to reserve</span>
+
+            <div className="bg-white border border-beige/40 rounded-2xl p-6 shadow-sm space-y-2">
+              <span className="text-[9px] font-bold text-midnight/50 uppercase tracking-wider block">Live Vacant Beds</span>
+              <p className="text-3xl font-sans font-bold text-midnight">{totalBedsLive}</p>
+              <span className="text-[9px] text-midnight/50 block font-sans">Beds ready to reserve</span>
             </div>
-            <div className="bg-white border rounded-xl p-5 shadow-sm space-y-1">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Total Escrow Volume</span>
-              <p className="text-2xl font-black text-indigo-600">₹{totalEscrowHeld}</p>
-              <span className="text-[10px] text-gray-400 block font-medium">₹2,000 per approved student</span>
+
+            <div className="bg-white border border-beige/40 rounded-2xl p-6 shadow-sm space-y-2">
+              <span className="text-[9px] font-bold text-midnight/50 uppercase tracking-wider block">Total Escrow Vault</span>
+              <p className="text-3xl font-sans font-bold text-midnight">₹{totalEscrowHeld}</p>
+              <span className="text-[9px] text-midnight/50 block font-sans">₹2,000 per verified booking</span>
             </div>
-            <div className="bg-white border rounded-xl p-5 shadow-sm space-y-1">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Traffic views</span>
-              <p className="text-2xl font-black text-gray-900">{pgs.reduce((sum, p) => sum + (p.viewCount || 0), 0)}</p>
-              <span className="text-[10px] text-gray-400 block font-medium">Hostel details page clicks</span>
+
+            <div className="bg-white border border-beige/40 rounded-2xl p-6 shadow-sm space-y-2">
+              <span className="text-[9px] font-bold text-midnight/50 uppercase tracking-wider block">Traffic Clicks</span>
+              <p className="text-3xl font-sans font-bold text-midnight">{pgs.reduce((sum, p) => sum + (p.viewCount || 0), 0)}</p>
+              <span className="text-[9px] text-midnight/50 block font-sans">Details page direct clicks</span>
             </div>
+
           </div>
 
           {/* Hostels Directory List */}
-          <div className="bg-white border rounded-xl shadow-sm p-6 space-y-4">
-            <div className="flex justify-between items-center border-b pb-3 flex-wrap gap-2">
-              <h2 className="text-lg font-extrabold text-gray-900">Registered PG Directory & Landlords</h2>
+          <div className="bg-white border border-beige/40 rounded-3xl p-6 sm:p-8 space-y-6">
+            <div className="flex justify-between items-center border-b border-beige/25 pb-4 flex-wrap gap-4">
+              <div>
+                <h2 className="text-xl font-sans font-bold text-midnight">Registered PG Directory & Landlords</h2>
+                <p className="text-xs text-midnight/55 mt-0.5">Publish new hostels, edit live listings, or delete records</p>
+              </div>
               <button
                 onClick={() => {
                   resetForm();
                   setShowAddModal(true);
                 }}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs py-2 px-4 rounded shadow cursor-pointer transition-colors"
+                className="inline-flex items-center justify-center bg-midnight hover:bg-midnight-light text-pearl font-bold text-xs px-5 py-3 rounded-xl transition-all shadow-xs cursor-pointer uppercase tracking-wider gap-1.5"
               >
-                + Register New Hostel PG
+                <Plus className="w-4 h-4 text-pearl" />
+                <span>Register PG Hostel</span>
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {pgs.map((pgItem) => {
                 const hostelBeds = pgItem.rooms.reduce((sum: number, r: any) => sum + r.availableBeds, 0);
                 return (
-                  <div key={pgItem.id} className="border rounded-lg overflow-hidden flex flex-col justify-between hover:border-indigo-400 transition-colors bg-gray-50/30">
-                    <div className="p-5 space-y-3 flex-grow">
+                  <div key={pgItem.id} className="border border-beige/45 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-midnight/35 transition-colors bg-beige/5 font-sans">
+                    
+                    <div className="p-6 space-y-4 flex-grow">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="font-extrabold text-gray-900 text-base">{pgItem.name}</h3>
-                          <p className="text-xs text-gray-400 mt-0.5">{pgItem.address}</p>
+                          <h3 className="font-bold text-midnight text-base leading-snug">{pgItem.name}</h3>
+                          <p className="text-xs text-midnight/55 mt-1">{pgItem.address}</p>
                         </div>
-                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full border bg-green-50 text-green-800 border-green-200">
+                        <span className="text-[9px] font-bold px-2.5 py-0.5 rounded-full border border-beige/65 bg-white text-midnight uppercase tracking-wider">
                           {pgItem.viewCount || 0} Views
                         </span>
                       </div>
 
                       {/* Landlord Contact */}
-                      <div className="bg-white border rounded p-3 text-xs space-y-1 text-gray-600">
-                        <span className="font-extrabold text-gray-400 uppercase tracking-wider block text-[9px]">Landlord Contact</span>
-                        <p>Name: <strong className="text-gray-700 font-bold">{pgItem.owner.name}</strong></p>
-                        <p>Phone: <strong className="text-indigo-600 font-bold select-all">{pgItem.owner.phone}</strong></p>
+                      <div className="bg-white border border-beige/35 rounded-xl p-4 text-xs space-y-1">
+                        <span className="font-bold text-midnight/50 uppercase tracking-widest block text-[9px] mb-1">Landlord Contact</span>
+                        <p className="font-sans">Name: <strong className="text-midnight font-bold">{pgItem.owner.name}</strong></p>
+                        <p className="font-sans">Phone: <strong className="text-midnight font-bold select-all font-mono">{pgItem.owner.phone}</strong></p>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 text-[11px] text-gray-500">
+                      <div className="grid grid-cols-2 gap-4 text-xs font-sans">
                         <div>
-                          <span className="text-gray-400 block">Nearby College:</span>
-                          <span className="font-bold text-gray-700">{pgItem.college.name.split(" (")[0]}</span>
+                          <span className="text-midnight/55 block text-[9px] font-bold uppercase tracking-wider">Nearby College</span>
+                          <span className="font-bold text-midnight">{pgItem.college.name.split(" (")[0]}</span>
                         </div>
                         <div>
-                          <span className="text-gray-400 block">Proximity:</span>
-                          <span className="font-bold text-gray-700">{pgItem.distanceKm} KM from gate</span>
+                          <span className="text-midnight/55 block text-[9px] font-bold uppercase tracking-wider">Proximity Distance</span>
+                          <span className="font-bold text-midnight">{pgItem.distanceKm} KM from gate</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Footer options */}
-                    <div className="bg-gray-100 border-t p-3 flex justify-between items-center text-xs flex-wrap gap-2">
+                    <div className="bg-beige/10 border-t border-beige/35 p-4 flex justify-between items-center text-xs flex-wrap gap-2">
                       <div className="flex gap-2">
                         <button
                           onClick={() => setSelectedPgDetail(pgItem)}
-                          className="bg-white border border-gray-300 hover:border-indigo-300 text-indigo-600 hover:bg-indigo-50 font-bold text-[10px] py-1 px-2.5 rounded transition-colors cursor-pointer"
+                          className="bg-white border border-beige/40 hover:bg-beige/10 text-midnight font-bold text-[9px] py-2 px-3 rounded-lg transition-colors cursor-pointer uppercase tracking-wider"
                         >
-                          Operations & Escrow
+                          Ledger
                         </button>
                         <button
                           onClick={() => openEditModal(pgItem)}
-                          className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold text-[10px] py-1 px-2.5 rounded transition-colors cursor-pointer"
+                          className="bg-white border border-beige/40 hover:bg-beige/10 text-midnight font-bold text-[9px] py-2 px-3 rounded-lg transition-colors cursor-pointer uppercase tracking-wider"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDeletePg(pgItem.id)}
-                          className="bg-white border border-red-200 hover:border-red-300 hover:bg-red-50 text-red-600 font-bold text-[10px] py-1 px-2.5 rounded transition-colors cursor-pointer"
+                          className="bg-white border border-red-200 hover:bg-red-50 text-red-600 font-bold text-[9px] py-2 px-3 rounded-lg transition-colors cursor-pointer uppercase tracking-wider"
                         >
                           Delete
                         </button>
                       </div>
-                      <span className="bg-indigo-100 text-indigo-800 font-extrabold px-2 py-0.5 rounded text-[10px]">
-                        {hostelBeds} Vacant Beds
+                      <span className="text-[9px] font-bold text-midnight bg-white border border-beige/35 rounded-md px-2.5 py-1 uppercase tracking-wider">
+                        {hostelBeds} Beds Vacant
                       </span>
                     </div>
+
                   </div>
                 );
               })}
@@ -599,83 +675,104 @@ export default function AdminPortal() {
       )}
 
       {activeTab === "transactions" && (
-        <div className="bg-white border rounded-xl p-6 shadow-sm space-y-4 max-w-4xl mx-auto">
-          <h2 className="text-lg font-extrabold text-gray-900 border-b pb-2">Verify Payments (UPI Escrow)</h2>
-          <p className="text-xs text-gray-500 leading-normal">
-            Transactions made via checkout gateway show as Approved automatically. Monitor manually submitted Ref IDs/UTR numbers and verify details.
-          </p>
+        <div className="bg-white border border-beige/40 rounded-3xl p-6 sm:p-8 space-y-6 max-w-4xl mx-auto">
+          <div className="border-b border-beige/25 pb-3">
+            <h2 className="text-xl font-sans font-bold text-midnight">Verify Escrow Payments</h2>
+            <p className="text-xs text-midnight/55 mt-0.5">Transactions processed through gateway are auto-verified. Manually verify bank UTRs if needed.</p>
+          </div>
 
           {bookings.length === 0 ? (
-            <p className="text-gray-500 text-sm italic py-4">No reservations created on platform.</p>
+            <p className="text-midnight/50 text-xs italic py-8 text-center">No transactions registered on platform.</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {bookings.map((booking) => {
                 const isPending = booking.status === "Pending";
                 const isApproved = booking.status === "Approved";
                 const isPendingPayment = booking.status === "Pending_Payment";
+                const isPaymentSubmitted = booking.status === "Payment_Submitted";
 
                 return (
                   <div
                     key={booking.id}
-                    className="border rounded-lg p-4 bg-gray-50/50 space-y-3 text-sm hover:border-indigo-200 transition-colors"
+                    className="border border-beige/45 rounded-2xl p-5 bg-beige/5 space-y-4 text-xs sm:text-sm hover:border-midnight/35 transition-colors font-sans"
                   >
                     <div className="flex justify-between items-start flex-wrap gap-2">
                       <div>
-                        <p className="font-extrabold text-gray-800 uppercase">CN-{booking.id.slice(0, 8)}</p>
-                        <p className="text-xs text-gray-500">Student: {booking.studentName} ({booking.studentPhone})</p>
+                        <p className="font-bold text-midnight uppercase text-xs">CN-{booking.id.slice(0, 8)}</p>
+                        <p className="text-[10px] text-midnight/55 font-semibold mt-1">Student: {booking.studentName} ({booking.studentPhone})</p>
                       </div>
+                      
                       <span
-                        className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
+                        className={`text-[9px] font-bold px-2.5 py-0.5 rounded-full border uppercase tracking-wider ${
                           isPendingPayment
-                            ? "bg-purple-50 text-purple-800 border-purple-200 animate-pulse"
+                            ? "bg-white text-midnight border-beige/65 animate-pulse"
+                            : isPaymentSubmitted
+                            ? "bg-yellow-50 text-yellow-800 border-yellow-250 animate-pulse"
                             : isPending
-                            ? "bg-amber-50 text-amber-800 border-amber-200"
+                            ? "bg-white text-midnight border-beige/65"
                             : isApproved
-                            ? "bg-green-50 text-green-800 border-green-200"
-                            : booking.status === "No-Show"
-                            ? "bg-slate-50 text-slate-600 border-slate-200"
+                            ? "bg-emerald-50 text-emerald-800 border-emerald-250"
                             : "bg-red-50 text-red-800 border-red-200"
                         }`}
                       >
-                        {booking.status === "Pending_Payment" ? "Awaiting Payment" : booking.status}
+                        {booking.status === "Pending_Payment" 
+                          ? "Awaiting Pay" 
+                          : booking.status === "Payment_Submitted" 
+                          ? "Awaiting Verification" 
+                          : booking.status === "Pending"
+                          ? "Awaiting Landlord"
+                          : booking.status}
                       </span>
                     </div>
 
-                    <div className="bg-white border p-3 rounded space-y-1 text-xs text-gray-600">
-                      <p>
-                        <span className="text-gray-400">Target PG:</span>{" "}
-                        <span className="font-bold text-gray-700">{booking.room.pg.name}</span>
+                    <div className="bg-white border border-beige/35 p-4 rounded-xl space-y-2 text-xs">
+                      <p className="flex justify-between">
+                        <span className="text-midnight/55">Target PG:</span>{" "}
+                        <span className="font-bold text-midnight">{booking.room.pg.name}</span>
                       </p>
-                      <p>
-                        <span className="text-gray-400">Room type:</span>{" "}
-                        <span className="font-bold text-gray-700">{booking.room.sharingType} Sharing</span>
+                      <p className="flex justify-between">
+                        <span className="text-midnight/55">Room type:</span>{" "}
+                        <span className="font-bold text-midnight">{booking.room.sharingType} Sharing</span>
                       </p>
-                      <p>
-                        <span className="text-gray-400">Check-in:</span>{" "}
-                        <span className="font-bold text-gray-700">
+                      <p className="flex justify-between">
+                        <span className="text-midnight/55">Check-in:</span>{" "}
+                        <span className="font-bold text-midnight">
                           {new Date(booking.checkInDate).toLocaleDateString()}
                         </span>
                       </p>
-                      <p className="pt-1 border-t mt-1 flex justify-between">
-                        <span>UTR Ref: <strong className="font-mono text-indigo-600 font-extrabold select-all">{booking.utr}</strong></span>
-                        <span className="font-black text-green-700">₹{booking.amountPaid}</span>
-                      </p>
+                      
+                      <div className="pt-2.5 border-t border-beige/25 mt-2 flex justify-between items-center">
+                        <span className="text-[10px]">UTR Ref: <strong className="font-mono text-midnight select-all font-bold">{booking.utr || "Direct Gateway Card"}</strong></span>
+                        <span className="font-black text-midnight text-sm">₹{booking.amountPaid}</span>
+                      </div>
                     </div>
 
-                    {/* Verification utilities */}
-                    {isPending && (
+                    {isPaymentSubmitted && (
                       <div className="flex gap-2">
                         <button
-                          onClick={() => handleBookingVerification(booking.id, "Approved")}
-                          className="bg-green-600 hover:bg-green-700 text-white font-semibold text-xs py-1.5 px-3 rounded shadow-sm transition-colors cursor-pointer"
+                          onClick={() => handleBookingVerification(booking.id, "Pending")}
+                          className="bg-midnight hover:bg-midnight-light text-pearl font-bold text-[10px] py-2 px-4 rounded-lg transition-colors cursor-pointer uppercase tracking-wider flex items-center gap-1 shadow-xs"
                         >
-                          Approve Payment & Alert Landlord
+                          <Check className="w-3 h-3 text-pearl" />
+                          <span>Verify Payment (Notify Landlord)</span>
                         </button>
                         <button
                           onClick={() => handleBookingVerification(booking.id, "Rejected")}
-                          className="bg-white border border-gray-300 text-gray-700 hover:bg-red-50 font-semibold text-xs py-1.5 px-3 rounded transition-colors cursor-pointer"
+                          className="bg-white border border-beige/45 hover:bg-beige/10 text-midnight font-bold text-[10px] py-2 px-4 rounded-lg transition-colors cursor-pointer uppercase tracking-wider"
                         >
-                          Reject / Refund
+                          Reject Payment
+                        </button>
+                      </div>
+                    )}
+
+                    {isPending && (
+                      <div className="flex gap-2 items-center justify-between w-full">
+                        <span className="text-[10px] text-midnight/50 italic font-semibold">Awaiting Landlord Confirmation...</span>
+                        <button
+                          onClick={() => handleBookingVerification(booking.id, "Approved")}
+                          className="bg-white border border-beige/40 text-midnight font-bold text-[9px] py-1.5 px-3 rounded-lg hover:bg-beige/10 transition-all cursor-pointer uppercase tracking-wider"
+                        >
+                          Force Approve
                         </button>
                       </div>
                     )}
@@ -688,57 +785,55 @@ export default function AdminPortal() {
       )}
 
       {activeTab === "queries" && (
-        <div className="bg-white border rounded-xl p-6 shadow-sm space-y-4 max-w-3xl mx-auto">
-          <h2 className="text-lg font-extrabold text-gray-900 border-b pb-2">Moderate Student Queries</h2>
-          <p className="text-xs text-gray-500 leading-normal">
-            Read questions posted by students. Contact the respective PG owner, verify the details, and submit answers on their behalf.
-          </p>
+        <div className="bg-white border border-beige/40 rounded-3xl p-6 sm:p-8 space-y-6 max-w-3xl mx-auto">
+          <div className="border-b border-beige/25 pb-3">
+            <h2 className="text-xl font-sans font-bold text-midnight">Moderate Student Queries</h2>
+            <p className="text-xs text-midnight/55 mt-0.5">Moderate questions asked by students. Submit replies verified with landlords.</p>
+          </div>
 
           {queries.length === 0 ? (
-            <p className="text-gray-500 text-sm italic py-4">No student queries received.</p>
+            <p className="text-midnight/55 text-xs italic py-8 text-center">No student queries received.</p>
           ) : (
             <div className="space-y-4 pr-1">
               {queries.map((q) => (
                 <div
                   key={q.id}
-                  className="border rounded-lg p-4 bg-gray-50/50 space-y-2 text-sm hover:border-indigo-200 transition-colors"
+                  className="border border-beige/40 rounded-2xl p-5 bg-beige/5 space-y-3 text-xs sm:text-sm hover:border-midnight/35 transition-colors font-sans"
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded font-bold">
-                        Target PG: {q.pg.name}
-                      </span>
-                    </div>
+                  <div className="flex justify-between items-start flex-wrap gap-2">
+                    <span className="text-[10px] font-bold text-midnight bg-white border border-beige/40 px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                      PG: {q.pg.name}
+                    </span>
                     <span
-                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                      className={`text-[9px] font-bold px-2.5 py-0.5 rounded-full border uppercase tracking-wider ${
                         q.status === "Answered"
-                          ? "bg-green-50 text-green-700 border border-green-200"
-                          : "bg-amber-50 text-amber-700 border border-amber-200"
+                          ? "bg-white text-midnight border-beige/65"
+                          : "bg-white text-midnight border-beige/65 animate-pulse"
                       }`}
                     >
                       {q.status}
                     </span>
                   </div>
 
-                  <div className="space-y-1">
-                    <p className="text-gray-400 text-xs font-medium">
-                      Student: <strong className="text-gray-700 font-bold">{q.studentName}</strong> ({q.studentPhone})
+                  <div className="space-y-1 leading-relaxed">
+                    <p className="text-midnight/50 text-[10px] font-bold uppercase tracking-wider">
+                      Student: {q.studentName} ({q.studentPhone})
                     </p>
-                    <p className="font-semibold text-gray-800 italic">" {q.question} "</p>
+                    <p className="font-semibold text-midnight italic">" {q.question} "</p>
                   </div>
 
                   {q.status === "Answered" ? (
-                    <div className="bg-white border p-3 rounded text-xs text-gray-600">
-                      <span className="font-bold text-green-700">Answered: </span>
+                    <div className="bg-white border border-beige/35 p-4 rounded-xl text-xs text-midnight/70 font-sans">
+                      <span className="font-bold text-midnight">Answer: </span>
                       {q.answer}
                     </div>
                   ) : answeringId === q.id ? (
-                    <form onSubmit={(e) => handleAnswerSubmit(e, q.id)} className="space-y-2 pt-2">
+                    <form onSubmit={(e) => handleAnswerSubmit(e, q.id)} className="space-y-3 pt-2">
                       <textarea
                         required
                         placeholder="Write the official answer verified with the landlord..."
                         rows={2}
-                        className="w-full bg-white border rounded p-2 text-xs text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        className="w-full bg-white border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight font-semibold font-sans"
                         value={adminAnswer}
                         onChange={(e) => setAdminAnswer(e.target.value)}
                       />
@@ -746,14 +841,14 @@ export default function AdminPortal() {
                         <button
                           type="submit"
                           disabled={submitLoading}
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-1.5 px-3 rounded shadow-sm cursor-pointer"
+                          className="bg-midnight hover:bg-midnight-light text-pearl font-bold text-[10px] py-2 px-4 rounded-lg transition-colors cursor-pointer uppercase tracking-wider"
                         >
                           Submit Answer
                         </button>
                         <button
                           type="button"
                           onClick={() => setAnsweringId("")}
-                          className="bg-gray-150 hover:bg-gray-200 text-gray-700 font-semibold text-xs py-1.5 px-3 rounded cursor-pointer"
+                          className="bg-white border border-beige/45 hover:bg-beige/10 text-midnight font-bold text-[10px] py-2 px-4 rounded-lg transition-colors cursor-pointer uppercase tracking-wider"
                         >
                           Cancel
                         </button>
@@ -765,7 +860,7 @@ export default function AdminPortal() {
                         setAnsweringId(q.id);
                         setAdminAnswer("");
                       }}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-1.5 px-3 rounded shadow-sm transition-colors mt-2 cursor-pointer"
+                      className="bg-midnight hover:bg-midnight-light text-pearl font-bold text-[10px] py-2.5 px-4 rounded-lg transition-all cursor-pointer uppercase tracking-wider inline-flex"
                     >
                       Reply on Behalf of Landlord
                     </button>
@@ -778,16 +873,16 @@ export default function AdminPortal() {
       )}
 
       {activeTab === "leads" && (
-        <div className="bg-white border rounded-xl p-6 shadow-sm space-y-4 max-w-4xl mx-auto">
-          <h2 className="text-lg font-extrabold text-gray-900 border-b pb-2">Ambassador Hostel Submission Forms</h2>
-          <p className="text-xs text-gray-500 leading-normal">
-            Verify new hostels and boarding options submitted by your college ambassadors. Link them to a landlord user and publish them instantly!
-          </p>
+        <div className="bg-white border border-beige/40 rounded-3xl p-6 sm:p-8 space-y-6 max-w-4xl mx-auto">
+          <div className="border-b border-beige/25 pb-3">
+            <h2 className="text-xl font-sans font-bold text-midnight">Ambassador Leads Approval</h2>
+            <p className="text-xs text-midnight/55 mt-0.5">Verify new hostel boardings submitted by college ambassadors. Assign owner and publish to map directory.</p>
+          </div>
 
           {leads.length === 0 ? (
-            <p className="text-gray-500 text-sm italic py-4">No ambassador submissions received yet.</p>
+            <p className="text-midnight/55 text-xs italic py-8 text-center">No ambassador submission leads received.</p>
           ) : (
-            <div className="grid grid-cols-1 gap-5">
+            <div className="space-y-6 font-sans">
               {leads.map((lead) => {
                 const isPending = lead.status === "Pending";
                 const isApproved = lead.status === "Approved";
@@ -795,63 +890,82 @@ export default function AdminPortal() {
                 const leadImages = lead.images ? lead.images.split(",") : [];
 
                 return (
-                  <div key={lead.id} className="border rounded-lg p-5 bg-gray-50/50 space-y-4 text-sm hover:border-indigo-200 transition-colors">
+                  <div key={lead.id} className="border border-beige/45 rounded-2xl p-5 bg-beige/5 space-y-4 text-xs sm:text-sm hover:border-midnight/35 transition-colors">
+                    
                     <div className="flex justify-between items-start flex-wrap gap-2">
-                      <div>
-                        <h3 className="font-extrabold text-gray-800 text-base">{lead.hostelName}</h3>
-                        <p className="text-xs text-gray-400">{lead.address}</p>
+                      <div className="space-y-0.5">
+                        <h3 className="font-bold text-midnight text-base leading-snug">{lead.hostelName}</h3>
+                        <p className="text-xs text-midnight/55">{lead.address}</p>
                         {lead.locationUrl && (
                           <a
                             href={lead.locationUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-indigo-600 hover:underline inline-block mt-1 font-bold"
+                            className="text-[10px] text-midnight underline inline-flex items-center gap-1 font-bold mt-1"
                           >
-                            📍 View Coordinates / GPS Map Location
+                            <span>📍 View coordinates on GPS map</span>
                           </a>
                         )}
                       </div>
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
+                      
+                      <span className={`text-[9px] font-bold px-2.5 py-0.5 rounded-full border uppercase tracking-wider ${
                         isPending
-                          ? "bg-amber-50 text-amber-800 border-amber-200"
+                          ? "bg-white text-midnight border-beige/65 animate-pulse"
                           : isApproved
-                          ? "bg-green-50 text-green-800 border-green-200"
-                          : "bg-red-50 text-red-800 border-red-200"
+                          ? "bg-white text-midnight border-beige/65"
+                          : "bg-red-50 text-red-850 border-red-200"
                       }`}>
                         {lead.status}
                       </span>
                     </div>
 
-                    {/* Detailed info */}
-                    <div className="bg-white border p-3 rounded text-xs text-gray-600 space-y-2">
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div className="bg-white border border-beige/35 p-4 rounded-xl text-xs space-y-3 leading-relaxed">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
-                          <span className="text-gray-400 block font-semibold">Proximity College:</span>
-                          <span className="font-bold text-gray-700">{lead.collegeName}</span>
-                          <span className="text-gray-400 block mt-1 font-semibold">Distance to Gate:</span>
-                          <span className="font-bold text-gray-700">{lead.distanceKm || "0.5"} KM</span>
+                          <span className="text-midnight/55 block text-[9px] font-bold uppercase tracking-wider">Nearby College</span>
+                          <span className="font-bold text-midnight">{lead.collegeName}</span>
+                          <span className="text-midnight/55 block text-[9px] font-bold uppercase tracking-wider mt-2.5">Proximity</span>
+                          <span className="font-bold text-midnight">{lead.distanceKm || "0.5"} KM</span>
                         </div>
                         <div>
-                          <span className="text-gray-400 block font-semibold">Landlord Details:</span>
-                          <span className="font-bold text-gray-700">{lead.ownerName}</span>
-                          <span className="text-[10px] text-gray-400 block mt-1 font-semibold">Phone:</span>
-                          <span className="font-bold text-indigo-600 select-all font-mono">{lead.ownerPhone}</span>
+                          <span className="text-midnight/55 block text-[9px] font-bold uppercase tracking-wider">Landlord Info</span>
+                          <span className="font-bold text-midnight">{lead.ownerName}</span>
+                          <span className="text-midnight/55 block text-[9px] font-bold uppercase tracking-wider mt-2.5">Owner Phone</span>
+                          <span className="font-bold text-midnight font-mono">{lead.ownerPhone}</span>
                         </div>
                         <div className="col-span-2">
-                          <span className="text-gray-400 block font-semibold">Rent & Sharing Specs:</span>
-                          <span className="font-bold text-gray-700">{lead.priceRange} ({lead.sharingTypes} sharing)</span>
-                          <span className="text-gray-400 block mt-1 font-semibold">Ambassador Notes:</span>
-                          <p className="text-[11px] text-gray-500 italic mt-0.5 leading-relaxed">"{lead.description}"</p>
+                          <span className="text-midnight/55 block text-[9px] font-bold uppercase tracking-wider">Rent & Sharing Categories</span>
+                          {lead.sharingTypes.trim().startsWith("[") ? (
+                            <div className="mt-1 space-y-1 bg-beige/5 border border-beige/35 p-2 rounded-lg text-xs">
+                              {(() => {
+                                try {
+                                  const customR = JSON.parse(lead.sharingTypes);
+                                  return customR.map((r: any, idx: number) => (
+                                    <div key={idx} className="flex justify-between items-center py-0.5">
+                                      <span className="font-bold text-midnight">{r.sharingType} Sharing</span>
+                                      <span className="font-semibold text-midnight/70">₹{r.priceMonthly}/mo ({r.availableBeds} beds)</span>
+                                    </div>
+                                  ));
+                                } catch {
+                                  return <span className="font-bold text-midnight">{lead.priceRange} ({lead.sharingTypes} sharing)</span>;
+                                }
+                              })()}
+                            </div>
+                          ) : (
+                            <span className="font-bold text-midnight">{lead.priceRange} ({lead.sharingTypes} sharing)</span>
+                          )}
+                          <span className="text-midnight/55 block text-[9px] font-bold uppercase tracking-wider mt-2.5">Ambassador Notes</span>
+                          <p className="text-[11px] text-midnight/65 italic mt-0.5 leading-relaxed">"{lead.description}"</p>
                         </div>
                       </div>
 
                       {/* Amenities checklist tags */}
                       {leadAmenities.length > 0 && (
-                        <div className="pt-2 border-t mt-2">
-                          <span className="text-gray-400 block font-semibold text-[10px] mb-1 uppercase tracking-wider">Amenities Verified by Ambassador:</span>
-                          <div className="flex flex-wrap gap-1">
+                        <div className="pt-3 border-t border-beige/20">
+                          <span className="text-midnight/55 block text-[9px] font-bold uppercase tracking-wider mb-2">Amenities Verified</span>
+                          <div className="flex flex-wrap gap-1.5">
                             {leadAmenities.map((amenity) => (
-                              <span key={amenity} className="bg-indigo-50 text-indigo-700 border border-indigo-100 rounded py-0.5 px-2 text-[10px] font-bold">
+                              <span key={amenity} className="bg-beige/10 text-midnight border border-beige/35 rounded-md py-0.5 px-2 text-[9px] font-bold">
                                 ✓ {amenity}
                               </span>
                             ))}
@@ -861,21 +975,21 @@ export default function AdminPortal() {
 
                       {/* Photos List Preview */}
                       {leadImages.length > 0 && (
-                        <div className="pt-2 border-t mt-2">
-                          <span className="text-gray-400 block font-semibold text-[10px] mb-1 uppercase tracking-wider">Submitted Photos (Click to enlarge):</span>
-                          <div className="flex gap-2 overflow-x-auto py-1">
+                        <div className="pt-3 border-t border-beige/20">
+                          <span className="text-midnight/55 block text-[9px] font-bold uppercase tracking-wider mb-2">Submitted Gallery (Click to expand)</span>
+                          <div className="flex gap-3 overflow-x-auto py-1">
                             {leadImages.map((imgUrl, index) => {
                               const labels = ["Cover Image", "Bathroom", "Bed Room", "Mess Dining", "Study Desk"];
                               return (
                                 <div key={imgUrl} className="flex-shrink-0 text-center space-y-1">
-                                  <a href={imgUrl} target="_blank" rel="noopener noreferrer" className="block relative group border rounded overflow-hidden shadow-sm hover:border-indigo-400">
+                                  <a href={imgUrl} target="_blank" rel="noopener noreferrer" className="block relative group border border-beige/30 rounded-lg overflow-hidden shadow-xs hover:border-midnight/40 bg-white">
                                     <img
                                       src={imgUrl}
                                       alt={labels[index] || `Photo ${index + 1}`}
-                                      className="w-20 h-16 object-cover bg-gray-100 group-hover:scale-105 transition-transform"
+                                      className="w-20 h-16 object-cover bg-beige/10 group-hover:scale-105 transition-transform"
                                     />
                                   </a>
-                                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wide block">
+                                  <span className="text-[9px] font-bold text-midnight/50 uppercase tracking-wide block">
                                     {labels[index] || `Image ${index + 1}`}
                                   </span>
                                 </div>
@@ -887,18 +1001,19 @@ export default function AdminPortal() {
                     </div>
 
                     {isPending && (
-                      <div className="flex gap-2 pt-1">
+                      <div className="flex gap-2">
                         <button
                           onClick={() => openApproveLeadModal(lead)}
-                          className="bg-green-600 hover:bg-green-700 text-white font-extrabold text-xs py-1.5 px-4 rounded shadow-sm transition-colors cursor-pointer"
+                          className="bg-midnight hover:bg-midnight-light text-pearl font-bold text-[10px] py-2 px-4 rounded-lg transition-colors cursor-pointer uppercase tracking-wider shadow-xs flex items-center gap-1"
                         >
-                          Approve & Publish Live
+                          <Check className="w-3 h-3 text-pearl" />
+                          <span>Approve & Publish</span>
                         </button>
                         <button
                           onClick={() => handleRejectLead(lead.id)}
-                          className="bg-white border border-gray-300 hover:bg-red-50 hover:border-red-300 text-gray-700 hover:text-red-700 font-semibold text-xs py-1.5 px-4 rounded transition-colors cursor-pointer"
+                          className="bg-white border border-beige/45 hover:bg-beige/10 text-midnight font-bold text-[10px] py-2 px-4 rounded-lg transition-colors cursor-pointer uppercase tracking-wider"
                         >
-                          Reject Submission
+                          Reject
                         </button>
                       </div>
                     )}
@@ -910,124 +1025,236 @@ export default function AdminPortal() {
         </div>
       )}
 
-      {/* OPERATIONS & ESCROW ANALYTICS OVERLAY */}
+      {activeTab === "updates" && (
+        <div className="bg-white border border-beige/40 rounded-3xl p-6 sm:p-8 space-y-6 max-w-4xl mx-auto font-sans">
+          <div className="border-b border-beige/25 pb-3">
+            <h2 className="text-xl font-sans font-bold text-midnight">Landlord Profile & PG Edits Approval</h2>
+            <p className="text-xs text-midnight/55 mt-0.5">Review PG listing changes submitted by landlords. Changes must be approved before they appear live on the directory.</p>
+          </div>
+
+          {pgs.filter(p => p.hasPendingUpdates).length === 0 ? (
+            <p className="text-midnight/55 text-xs italic py-8 text-center">No pending landlord updates received.</p>
+          ) : (
+            <div className="space-y-8">
+              {pgs.filter(p => p.hasPendingUpdates).map((pgItem) => {
+                const currentAmenities = pgItem.amenities.split(", ");
+                const pendingAmenities = (pgItem.pendingAmenities || "").split(", ").filter(Boolean);
+
+                const currentImages = pgItem.images ? pgItem.images.split(",") : [];
+                const pendingImages = pgItem.pendingImages ? pgItem.pendingImages.split(",") : [];
+
+                return (
+                  <div key={pgItem.id} className="border border-beige/45 rounded-2xl p-5 bg-beige/5 space-y-5">
+                    <div className="flex justify-between items-start flex-wrap gap-2 border-b border-beige/25 pb-3">
+                      <div>
+                        <h3 className="font-bold text-midnight text-base leading-snug">{pgItem.name}</h3>
+                        <p className="text-[10px] text-midnight/55 font-bold uppercase mt-1">Landlord: {pgItem.owner.name} ({pgItem.owner.phone})</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleApproveRejectUpdates(pgItem.id, "approve")}
+                          disabled={submitLoading}
+                          className="bg-midnight hover:bg-midnight-light text-pearl font-bold text-[10px] py-2 px-4 rounded-lg transition-colors cursor-pointer uppercase tracking-wider shadow-xs flex items-center gap-1"
+                        >
+                          <Check className="w-3 h-3 text-pearl" />
+                          <span>Approve Changes</span>
+                        </button>
+                        <button
+                          onClick={() => handleApproveRejectUpdates(pgItem.id, "reject")}
+                          disabled={submitLoading}
+                          className="bg-white border border-beige/45 hover:bg-beige/10 text-midnight font-bold text-[10px] py-2 px-4 rounded-lg transition-colors cursor-pointer uppercase tracking-wider"
+                        >
+                          Reject Changes
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Side by side comparison grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs sm:text-sm">
+                      {/* Left: Live listing */}
+                      <div className="bg-white border border-beige/35 p-4 rounded-xl space-y-3">
+                        <span className="text-[9px] font-bold text-midnight bg-beige/25 border border-beige/35 rounded px-2 py-0.5 uppercase tracking-wider">Live Listing Details</span>
+                        <div className="space-y-2 pt-2 leading-relaxed">
+                          <p><strong className="text-midnight font-bold">PG Name:</strong> {pgItem.name}</p>
+                          <p><strong className="text-midnight font-bold">Address:</strong> {pgItem.address}</p>
+                          <p><strong className="text-midnight font-bold">Proximity:</strong> {pgItem.distanceKm} KM</p>
+                          <p><strong className="text-midnight font-bold">Reservation Fee:</strong> ₹{pgItem.reservationFee}</p>
+                          <p><strong className="text-midnight font-bold">Description:</strong> {pgItem.description}</p>
+                                        <div className="pt-2">
+                            <strong className="text-midnight font-bold block mb-1">Amenities:</strong>
+                            <div className="flex flex-wrap gap-1 text-[10px] font-bold">
+                              {currentAmenities.map((amenity: string) => (
+                                <span key={amenity} className="bg-beige/10 border border-beige/35 rounded-md px-2 py-0.5">
+                                  ✓ {amenity}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="pt-2">
+                            <strong className="text-midnight font-bold block mb-1">Photos:</strong>
+                            <div className="flex gap-2 overflow-x-auto py-1">
+                              {currentImages.map((img: string, i: number) => (
+                                <a key={img} href={img} target="_blank" rel="noreferrer" className="block shrink-0 border border-beige/30 rounded overflow-hidden">
+                                  <img src={img} alt="Current" className="w-16 h-12 object-cover" />
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right: Pending Landlord Edits */}
+                      <div className="bg-yellow-50/30 border border-yellow-250 p-4 rounded-xl space-y-3">
+                        <span className="text-[9px] font-bold text-yellow-900 bg-yellow-50 border border-yellow-200 rounded px-2 py-0.5 uppercase tracking-wider">Proposed Landlord Edits</span>
+                        <div className="space-y-2 pt-2 leading-relaxed text-yellow-955">
+                          <p><strong className="font-bold">PG Name:</strong> <span className={pgItem.name !== pgItem.pendingName ? "text-amber-700 font-bold" : ""}>{pgItem.pendingName}</span></p>
+                          <p><strong className="font-bold">Address:</strong> <span className={pgItem.address !== pgItem.pendingAddress ? "text-amber-700 font-bold" : ""}>{pgItem.pendingAddress}</span></p>
+                          <p><strong className="font-bold">Proximity:</strong> <span className={pgItem.distanceKm !== pgItem.pendingDistanceKm ? "text-amber-700 font-bold" : ""}>{pgItem.pendingDistanceKm} KM</span></p>
+                          <p><strong className="font-bold">Reservation Fee:</strong> <span className={pgItem.reservationFee !== pgItem.pendingReservationFee ? "text-amber-700 font-bold" : ""}>₹{pgItem.pendingReservationFee}</span></p>
+                          <p><strong className="font-bold">Description:</strong> <span className={pgItem.description !== pgItem.pendingDescription ? "text-amber-700 font-bold" : ""}>{pgItem.pendingDescription}</span></p>
+                          
+                          <div className="pt-2">
+                            <strong className="font-bold block mb-1">Amenities:</strong>
+                            <div className="flex flex-wrap gap-1 text-[10px] font-bold">
+                              {pendingAmenities.map((amenity: string) => {
+                                const isNew = !currentAmenities.includes(amenity);
+                                return (
+                                  <span key={amenity} className={`border rounded-md px-2 py-0.5 ${isNew ? "bg-amber-50 border-amber-300 text-amber-700 font-bold" : "bg-white border-beige/35"}`}>
+                                    ✓ {amenity} {isNew && "(New)"}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          <div className="pt-2">
+                            <strong className="font-bold block mb-1">Photos:</strong>
+                            <div className="flex gap-2 overflow-x-auto py-1">
+                              {pendingImages.map((img: string, i: number) => (
+                                <a key={img} href={img} target="_blank" rel="noreferrer" className="block shrink-0 border border-beige/30 rounded overflow-hidden">
+                                  <img src={img} alt="Proposed" className="w-16 h-12 object-cover" />
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* OPERATIONS & ESCROW LEDGER MODAL */}
       {selectedPgDetail && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl max-w-4xl w-full p-6 shadow-2xl space-y-6 relative border border-gray-150 my-8">
+        <div className="fixed inset-0 z-50 bg-midnight/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-4xl w-full p-6 sm:p-8 shadow-2xl relative border border-beige/40 my-8 text-midnight font-sans">
             <button
               onClick={() => setSelectedPgDetail(null)}
-              className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer"
+              className="absolute right-6 top-6 text-midnight/65 hover:text-midnight transition-colors"
             >
-              ✕
+              <X className="w-6 h-6" />
             </button>
 
             <div>
-              <span className="text-xs text-indigo-600 font-extrabold uppercase tracking-wider block">Hostel Financial Ledger</span>
-              <h2 className="text-xl font-black text-gray-900">{selectedPgDetail.name}</h2>
-              <p className="text-xs text-gray-500">{selectedPgDetail.address}</p>
-              {selectedPgDetail.locationUrl && (
-                <a
-                  href={selectedPgDetail.locationUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-indigo-600 hover:underline inline-block mt-1 font-semibold"
-                >
-                  📍 View Location on Google Maps
-                </a>
-              )}
+              <span className="text-[10px] text-midnight/55 uppercase font-bold tracking-widest block">Financial Ledger</span>
+              <h2 className="text-2xl font-sans font-bold text-midnight mt-1">{selectedPgDetail.name}</h2>
+              <p className="text-xs text-midnight/60 mt-0.5">{selectedPgDetail.address}</p>
             </div>
 
             {/* Room Inventory */}
-            <div>
-              <h4 className="font-extrabold text-xs text-gray-500 uppercase tracking-wide mb-2">Room Inventory & Capacity</h4>
+            <div className="space-y-2.5 pt-4">
+              <h4 className="font-bold text-midnight/55 uppercase text-[9px] tracking-widest block">Room Inventory & Capacity</h4>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {selectedPgDetail.rooms.map((room: any) => (
-                  <div key={room.id} className="border rounded-lg p-3 bg-gray-50 text-xs">
-                    <p className="font-bold text-gray-800">{room.sharingType} Sharing ({room.genderPreference})</p>
-                    <p className="text-indigo-600 font-extrabold mt-1">₹{room.priceMonthly} / month</p>
-                    <p className="text-gray-500 mt-0.5">Vacant Beds: <span className="font-bold text-gray-700">{room.availableBeds}</span></p>
+                  <div key={room.id} className="border border-beige/35 rounded-xl p-4 bg-beige/5 text-xs">
+                    <p className="font-bold text-midnight">{room.sharingType} Sharing ({room.genderPreference})</p>
+                    <p className="text-midnight font-extrabold mt-1">₹{room.priceMonthly} / month</p>
+                    <p className="text-midnight/60 mt-1">Vacant Beds: <span className="font-bold text-midnight">{room.availableBeds}</span></p>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Compute Escrow Metrics for PG */}
+            {/* Ledger summary */}
             {(() => {
               const pgBookings = bookings.filter((b) => b.room.pg.id === selectedPgDetail.id);
               const approved = pgBookings.filter((b) => b.status === "Approved");
-              const pendingPayment = pgBookings.filter((b) => b.status === "Pending_Payment");
               const pendingVerification = pgBookings.filter((b) => b.status === "Pending");
 
-              // Determine joined (check-in date passed today) vs escrowed (check-in date is in future)
               const today = new Date();
               const joined = approved.filter((b) => new Date(b.checkInDate) < today);
               const reserved = approved.filter((b) => new Date(b.checkInDate) >= today);
 
-              const totalPaidByStudents = approved.length * 2200;
+              const totalPaidByStudents = approved.length * (selectedPgDetail.reservationFee ?? 2200);
               const platformFees = approved.length * 200;
-              const escrowReleased = joined.length * 2000;
-              const escrowHeld = reserved.length * 2000;
-              const pendingVerificationCash = pendingVerification.length * 2200;
+              const escrowReleased = joined.length * (selectedPgDetail.reservationFee ?? 2000);
+              const escrowHeld = reserved.length * (selectedPgDetail.reservationFee ?? 2000);
+              const pendingVerificationCash = pendingVerification.length * (selectedPgDetail.reservationFee ?? 2200);
 
               return (
-                <div className="space-y-6">
-                  {/* Ledger summary */}
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 border-t pt-4">
-                    <div className="bg-indigo-50/50 border border-indigo-100 rounded-lg p-3">
-                      <span className="text-[9px] text-gray-400 font-bold block uppercase tracking-wider">Total Booking Value</span>
-                      <span className="text-base font-black text-indigo-700">₹{totalPaidByStudents}</span>
+                <div className="space-y-6 pt-4">
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 border-t border-beige/25 pt-4">
+                    <div className="bg-beige/10 border border-beige/35 rounded-xl p-4">
+                      <span className="text-[9px] text-midnight/50 font-bold block uppercase tracking-wider">Total Value</span>
+                      <span className="text-lg font-black text-midnight block mt-1">₹{totalPaidByStudents}</span>
                     </div>
-                    <div className="bg-green-50/50 border border-green-100 rounded-lg p-3">
-                      <span className="text-[9px] text-gray-400 font-bold block uppercase tracking-wider">Escrow Released</span>
-                      <span className="text-base font-black text-green-700">₹{escrowReleased}</span>
+                    <div className="bg-beige/10 border border-beige/35 rounded-xl p-4">
+                      <span className="text-[9px] text-midnight/50 font-bold block uppercase tracking-wider">Escrow Released</span>
+                      <span className="text-lg font-black text-midnight block mt-1">₹{escrowReleased}</span>
                     </div>
-                    <div className="bg-amber-50/50 border border-amber-100 rounded-lg p-3">
-                      <span className="text-[9px] text-gray-400 font-bold block uppercase tracking-wider">Escrow Held (Due)</span>
-                      <span className="text-base font-black text-amber-700">₹{escrowHeld}</span>
+                    <div className="bg-beige/10 border border-beige/35 rounded-xl p-4">
+                      <span className="text-[9px] text-midnight/50 font-bold block uppercase tracking-wider">Escrow Held</span>
+                      <span className="text-lg font-black text-midnight block mt-1">₹{escrowHeld}</span>
                     </div>
-                    <div className="bg-purple-50/50 border border-purple-100 rounded-lg p-3">
-                      <span className="text-[9px] text-gray-400 font-bold block uppercase tracking-wider font-black">Platform Net Profit</span>
-                      <span className="text-base font-black text-purple-700">₹{platformFees}</span>
+                    <div className="bg-beige/10 border border-beige/35 rounded-xl p-4">
+                      <span className="text-[9px] text-midnight/50 font-bold block uppercase tracking-wider font-black">Net Profit</span>
+                      <span className="text-lg font-black text-midnight block mt-1">₹{platformFees}</span>
                     </div>
-                    <div className="bg-gray-100 border border-gray-200 rounded-lg p-3">
-                      <span className="text-[9px] text-gray-400 font-bold block uppercase tracking-wider">Awaiting Verification</span>
-                      <span className="text-base font-black text-amber-600">₹{pendingVerificationCash}</span>
+                    <div className="bg-beige/10 border border-beige/35 rounded-xl p-4">
+                      <span className="text-[9px] text-midnight/50 font-bold block uppercase tracking-wider">Awaiting UTR</span>
+                      <span className="text-lg font-black text-midnight block mt-1">₹{pendingVerificationCash}</span>
                     </div>
                   </div>
 
-                  {/* Unified Live Guest Ledger with Search & Status Filters */}
-                  <div className="border-t pt-4 space-y-4">
+                  {/* Student Reservations Directory */}
+                  <div className="border-t border-beige/25 pt-4 space-y-4">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                       <div>
-                        <h4 className="font-extrabold text-xs text-gray-500 uppercase tracking-wider">Student Reservations Directory</h4>
-                        <p className="text-[10px] text-gray-400">View and manage all registered guests in one consolidated list.</p>
+                        <h4 className="font-bold text-midnight/50 uppercase text-[9px] tracking-widest">Student Reservations Directory</h4>
+                        <p className="text-[10px] text-midnight/55">Verify check-ins and ledger updates</p>
                       </div>
 
-                      {/* Search & Filter Controls */}
+                      {/* Controls */}
                       <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                         <input
                           type="text"
-                          placeholder="Search guest name or phone..."
-                          className="bg-gray-50 border border-gray-300 rounded p-1.5 text-xs text-gray-950 focus:ring-1 focus:ring-indigo-500 focus:outline-none w-full sm:w-48 font-medium"
+                          placeholder="Search name or phone..."
+                          className="bg-beige/10 border border-beige/40 rounded-xl p-2 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight w-full sm:w-48 font-semibold"
                           value={guestSearchQuery}
                           onChange={(e) => setGuestSearchQuery(e.target.value)}
                         />
                         <select
-                          className="bg-gray-50 border border-gray-300 rounded p-1.5 text-xs text-gray-950 focus:outline-none cursor-pointer font-medium"
+                          className="bg-beige/10 border border-beige/40 rounded-xl p-2 text-xs text-midnight focus:outline-none cursor-pointer font-semibold"
                           value={guestStatusFilter}
                           onChange={(e) => setGuestStatusFilter(e.target.value)}
                         >
-                          <option value="ALL">All Guest States</option>
-                          <option value="Joined">Checked-In Guests</option>
-                          <option value="Reserved">Escrowed Reservations</option>
-                          <option value="Pending">Awaiting Verification</option>
-                          <option value="Pending_Payment">Awaiting Payment</option>
+                          <option value="ALL">All States</option>
+                          <option value="Joined">Checked-In</option>
+                          <option value="Reserved">Escrow Held</option>
+                          <option value="Pending">Awaiting Verify</option>
+                          <option value="Pending_Payment">Awaiting Pay</option>
                         </select>
                       </div>
                     </div>
 
-                    {/* Guest Ledger Table */}
-                    <div className="border rounded-lg overflow-hidden bg-white max-h-96 overflow-y-auto shadow-inner">
+                    {/* Table */}
+                    <div className="border border-beige/35 rounded-2xl overflow-hidden bg-white max-h-96 overflow-y-auto">
                       <div className="overflow-x-auto">
                         {(() => {
                           const filtered = pgBookings.filter((b) => {
@@ -1048,16 +1275,16 @@ export default function AdminPortal() {
 
                           if (filtered.length === 0) {
                             return (
-                              <p className="text-gray-400 text-xs italic text-center py-8">
-                                No matching student registrations found.
+                              <p className="text-midnight/55 text-xs italic text-center py-8">
+                                No matching guest records found.
                               </p>
                             );
                           }
 
                           return (
-                            <table className="w-full text-left text-xs border-collapse min-w-[650px]">
+                            <table className="w-full text-left text-xs border-collapse min-w-[650px] font-sans">
                               <thead>
-                                <tr className="bg-gray-50 border-b text-[10px] uppercase text-gray-400 font-extrabold sticky top-0 z-10">
+                                <tr className="bg-beige/10 border-b border-beige/35 text-[9px] uppercase text-midnight/55 font-bold sticky top-0 z-10">
                                   <th className="p-3">Student Guest</th>
                                   <th className="p-3">Sharing</th>
                                   <th className="p-3">Check-in Date</th>
@@ -1066,7 +1293,7 @@ export default function AdminPortal() {
                                   <th className="p-3 text-right">Operations Action</th>
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-gray-100">
+                              <tbody className="divide-y divide-beige/20">
                                 {filtered.map((b) => {
                                   const isJoined = b.status === "Approved" && new Date(b.checkInDate) < today;
                                   const isReserved = b.status === "Approved" && new Date(b.checkInDate) >= today;
@@ -1074,32 +1301,32 @@ export default function AdminPortal() {
                                   const isAwaitingPay = b.status === "Pending_Payment";
 
                                   return (
-                                    <tr key={b.id} className="hover:bg-gray-50 transition-colors">
+                                    <tr key={b.id} className="hover:bg-beige/5 transition-colors">
                                       <td className="p-3">
-                                        <p className="font-extrabold text-gray-900">{b.studentName}</p>
-                                        <p className="text-[10px] text-gray-500 font-mono select-all">{b.studentPhone}</p>
+                                        <p className="font-bold text-midnight">{b.studentName}</p>
+                                        <p className="text-[10px] text-midnight/55 font-mono select-all">{b.studentPhone}</p>
                                       </td>
-                                      <td className="p-3 text-gray-700">
-                                        <span className="font-bold">{b.room.sharingType} Sharing</span>
+                                      <td className="p-3 text-midnight/70">
+                                        <span className="font-semibold">{b.room.sharingType} Sharing</span>
                                       </td>
-                                      <td className="p-3 text-gray-600 font-medium">
+                                      <td className="p-3 text-midnight/70">
                                         {new Date(b.checkInDate).toLocaleDateString()}
                                       </td>
-                                      <td className="p-3">
-                                        <p className="font-bold text-green-700">₹{b.amountPaid}</p>
-                                        <p className="text-[9px] text-gray-400 font-mono select-all">UTR: {b.utr || "N/A"}</p>
+                                      <td className="p-3 text-midnight/70">
+                                        <p className="font-bold text-midnight">₹{b.amountPaid}</p>
+                                        <p className="text-[9px] text-midnight/55 font-mono select-all">UTR: {b.utr || "N/A"}</p>
                                       </td>
                                       <td className="p-3">
                                         <span
-                                          className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold border ${
+                                          className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-bold border uppercase tracking-wider ${
                                             isJoined
-                                              ? "bg-green-50 text-green-800 border-green-200"
+                                              ? "bg-white text-midnight border-beige/65"
                                               : isReserved
-                                              ? "bg-amber-50 text-amber-800 border-amber-200"
+                                              ? "bg-white text-midnight border-beige/65"
                                               : isPendingVer
-                                              ? "bg-orange-50 text-orange-800 border-orange-200 animate-pulse"
+                                              ? "bg-white text-midnight border-beige/65 animate-pulse"
                                               : isAwaitingPay
-                                              ? "bg-purple-50 text-purple-800 border-purple-200"
+                                              ? "bg-white text-midnight border-beige/65"
                                               : "bg-red-50 text-red-800 border-red-200"
                                           }`}
                                         >
@@ -1111,19 +1338,19 @@ export default function AdminPortal() {
                                           <div className="flex gap-1 justify-end">
                                             <button
                                               onClick={() => handleBookingVerification(b.id, "Approved")}
-                                              className="bg-green-600 hover:bg-green-700 text-white font-extrabold text-[9px] py-1 px-2 rounded shadow cursor-pointer transition-colors"
+                                              className="bg-midnight hover:bg-midnight-light text-pearl font-bold text-[9px] py-1.5 px-3 rounded shadow-xs cursor-pointer transition-colors uppercase tracking-wider"
                                             >
                                               Approve
                                             </button>
                                             <button
                                               onClick={() => handleBookingVerification(b.id, "Rejected")}
-                                              className="bg-white border border-red-200 hover:bg-red-50 text-red-600 font-semibold text-[9px] py-1 px-2 rounded cursor-pointer transition-colors"
+                                              className="bg-white border border-beige/45 hover:bg-beige/10 text-midnight font-bold text-[9px] py-1.5 px-3 rounded cursor-pointer transition-colors uppercase tracking-wider"
                                             >
                                               Reject
                                             </button>
                                           </div>
                                         ) : (
-                                          <span className="text-[10px] text-gray-400 italic">No action needed</span>
+                                          <span className="text-[10px] text-midnight/40 italic">No action needed</span>
                                         )}
                                       </td>
                                     </tr>
@@ -1137,10 +1364,10 @@ export default function AdminPortal() {
                     </div>
                   </div>
 
-                  <div className="text-center pt-4 border-t">
+                  <div className="text-center pt-4 border-t border-beige/25">
                     <button
                       onClick={() => setSelectedPgDetail(null)}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-6 rounded-md transition-colors cursor-pointer shadow-sm"
+                      className="bg-midnight hover:bg-midnight-light text-pearl font-bold text-xs py-3 px-6 rounded-xl transition-all cursor-pointer uppercase tracking-wider"
                     >
                       Close Ledger View
                     </button>
@@ -1154,75 +1381,80 @@ export default function AdminPortal() {
 
       {/* CRUD MODALS: ADD NEW HOSTEL PG */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl max-w-xl w-full p-6 shadow-2xl relative space-y-4 border my-8">
-            <button onClick={() => setShowAddModal(false)} className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">✕</button>
-            <h2 className="text-xl font-black text-gray-900">Register New PG Hostel</h2>
+        <div className="fixed inset-0 z-50 bg-midnight/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl relative space-y-5 border border-beige/40 my-8 text-midnight font-sans">
+            <button onClick={() => setShowAddModal(false)} className="absolute right-6 top-6 text-midnight/65 hover:text-midnight transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            
+            <h2 className="text-xl font-sans font-bold text-midnight border-b border-beige/25 pb-3">Register New PG Hostel</h2>
 
             <form onSubmit={handleCreatePg} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1">Hostel/PG Name</label>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-midnight/70 uppercase">Hostel/PG Name</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Balaji Premium Boys Hostel"
-                    className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none"
+                    className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight font-semibold"
                     value={pgName}
                     onChange={(e) => setPgName(e.target.value)}
                   />
                 </div>
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1">Gate Distance (KM)</label>
+                
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-midnight/70 uppercase">Gate Distance (KM)</label>
                   <input
                     type="number"
                     step="0.1"
                     required
-                    className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none"
+                    className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight font-semibold"
                     value={pgDistance}
                     onChange={(e) => setPgDistance(e.target.value)}
                   />
                 </div>
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1">Booking Advance (₹)</label>
+                
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-midnight/70 uppercase">Booking Advance (₹)</label>
                   <input
                     type="number"
                     required
                     placeholder="2000"
-                    className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none"
+                    className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight font-semibold font-mono"
                     value={pgReservationFee}
                     onChange={(e) => setPgReservationFee(e.target.value)}
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">Hostel Address / Landmark</label>
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-midnight/70 uppercase">Hostel Address / Landmark</label>
                 <input
                   type="text"
                   required
                   placeholder="Near Gate 2, RGMCET Campus outskirts"
-                  className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none"
+                  className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight font-semibold"
                   value={pgAddress}
                   onChange={(e) => setPgAddress(e.target.value)}
                 />
               </div>
 
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">Amenities (Comma separated)</label>
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-midnight/70 uppercase">Amenities (Comma separated)</label>
                 <input
                   type="text"
-                  className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none"
+                  className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight font-semibold"
                   value={pgAmenities}
                   onChange={(e) => setPgAmenities(e.target.value)}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1">Link Target Proximity College</label>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-midnight/70 uppercase">Link Target College</label>
                   <select
-                    className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none cursor-pointer"
+                    className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none cursor-pointer font-semibold"
                     value={pgCollegeId}
                     onChange={(e) => setPgCollegeId(e.target.value)}
                   >
@@ -1231,10 +1463,10 @@ export default function AdminPortal() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1">Link Landlord / PG Owner</label>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-midnight/70 uppercase">Link Landlord / Owner</label>
                   <select
-                    className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none cursor-pointer"
+                    className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none cursor-pointer font-semibold"
                     value={pgOwnerId}
                     onChange={(e) => setPgOwnerId(e.target.value)}
                   >
@@ -1245,12 +1477,12 @@ export default function AdminPortal() {
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">Cover Image URL</label>
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-midnight/70 uppercase">Cover Image URL</label>
                 <input
                   type="text"
                   placeholder="https://unsplash.com/..."
-                  className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none"
+                  className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight font-semibold"
                   value={pgImageUrl}
                   onChange={(e) => setPgImageUrl(e.target.value)}
                 />
@@ -1259,7 +1491,7 @@ export default function AdminPortal() {
               <button
                 type="submit"
                 disabled={submitLoading}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3 rounded shadow cursor-pointer text-center text-xs mt-2"
+                className="w-full bg-midnight hover:bg-midnight-light text-pearl font-bold py-4 rounded-xl text-xs mt-4 transition-colors cursor-pointer text-center uppercase tracking-wider"
               >
                 {submitLoading ? "Publishing..." : "Confirm & Publish PG"}
               </button>
@@ -1270,84 +1502,86 @@ export default function AdminPortal() {
 
       {/* CRUD MODALS: EDIT PG DETAILS */}
       {showEditModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl max-w-xl w-full p-6 shadow-2xl relative space-y-4 border my-8">
-            <button onClick={() => setShowEditModal(null)} className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">✕</button>
-            <h2 className="text-xl font-black text-gray-900">Edit PG Hostel Details</h2>
+        <div className="fixed inset-0 z-50 bg-midnight/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl relative space-y-5 border border-beige/40 my-8 text-midnight font-sans">
+            <button onClick={() => setShowEditModal(null)} className="absolute right-6 top-6 text-midnight/65 hover:text-midnight transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            
+            <h2 className="text-xl font-sans font-bold text-midnight border-b border-beige/25 pb-3">Edit PG Hostel Details</h2>
 
             <form onSubmit={handleUpdatePg} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1">PG Hostel Name</label>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-midnight/70 uppercase">PG Hostel Name</label>
                   <input
                     type="text"
                     required
-                    className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none"
+                    className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight font-semibold"
                     value={pgName}
                     onChange={(e) => setPgName(e.target.value)}
                   />
                 </div>
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1">Gate Distance (KM)</label>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-midnight/70 uppercase">Gate Distance (KM)</label>
                   <input
                     type="number"
                     step="0.1"
                     required
-                    className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none"
+                    className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight font-semibold"
                     value={pgDistance}
                     onChange={(e) => setPgDistance(e.target.value)}
                   />
                 </div>
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1">Booking Advance (₹)</label>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-midnight/70 uppercase">Booking Advance (₹)</label>
                   <input
                     type="number"
                     required
-                    placeholder="2000"
-                    className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none"
+                    className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight font-semibold font-mono"
                     value={pgReservationFee}
                     onChange={(e) => setPgReservationFee(e.target.value)}
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">Hostel Address</label>
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-midnight/70 uppercase">Hostel Address</label>
                 <input
                   type="text"
                   required
-                  className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none"
+                  className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight font-semibold"
                   value={pgAddress}
                   onChange={(e) => setPgAddress(e.target.value)}
                 />
               </div>
 
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">PG Description</label>
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-midnight/70 uppercase">PG Description</label>
                 <textarea
                   rows={2}
                   required
-                  className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none"
+                  className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight font-semibold"
                   value={pgDescription}
                   onChange={(e) => setPgDescription(e.target.value)}
                 />
               </div>
 
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">Amenities (Comma separated)</label>
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-midnight/70 uppercase">Amenities (Comma separated)</label>
                 <input
                   type="text"
-                  className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none"
+                  className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight font-semibold"
                   value={pgAmenities}
                   onChange={(e) => setPgAmenities(e.target.value)}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1">College Link</label>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-midnight/70 uppercase">College Link</label>
                   <select
-                    className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none cursor-pointer"
+                    className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none cursor-pointer font-semibold"
                     value={pgCollegeId}
                     onChange={(e) => setPgCollegeId(e.target.value)}
                   >
@@ -1356,10 +1590,10 @@ export default function AdminPortal() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1">Landlord Link</label>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-midnight/70 uppercase">Landlord Link</label>
                   <select
-                    className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none cursor-pointer"
+                    className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none cursor-pointer font-semibold"
                     value={pgOwnerId}
                     onChange={(e) => setPgOwnerId(e.target.value)}
                   >
@@ -1371,20 +1605,21 @@ export default function AdminPortal() {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1">Cover Image URL</label>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-midnight/70 uppercase">Cover Image URL</label>
                   <input
                     type="text"
-                    className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none"
+                    className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight font-semibold"
                     value={pgImageUrl}
                     onChange={(e) => setPgImageUrl(e.target.value)}
                   />
                 </div>
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1">Gallery Image URLs (Comma-separated)</label>
+                
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-midnight/70 uppercase">Gallery Images</label>
                   <input
                     type="text"
-                    className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none"
+                    className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight font-semibold"
                     value={pgImages}
                     onChange={(e) => setPgImages(e.target.value)}
                   />
@@ -1394,7 +1629,7 @@ export default function AdminPortal() {
               <button
                 type="submit"
                 disabled={submitLoading}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3 rounded shadow cursor-pointer text-center text-xs mt-2"
+                className="w-full bg-midnight hover:bg-midnight-light text-pearl font-bold py-4 rounded-xl text-xs mt-4 transition-colors cursor-pointer text-center uppercase tracking-wider"
               >
                 {submitLoading ? "Saving changes..." : "Save Changes"}
               </button>
@@ -1405,20 +1640,24 @@ export default function AdminPortal() {
 
       {/* CRUD MODALS: APPROVE AMBASSADOR SUBMISSION */}
       {showApproveLeadModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl max-w-xl w-full p-6 shadow-2xl relative space-y-4 border my-8">
-            <button onClick={() => setShowApproveLeadModal(null)} className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 text-xl font-bold cursor-pointer">✕</button>
-            <h2 className="text-xl font-black text-gray-900">Approve & Register PG Listing</h2>
-            <p className="text-xs text-gray-500 leading-normal">
-              Approve submission form for <strong className="text-gray-700">{showApproveLeadModal.hostelName}</strong>. Select the landlord account and target college below to make it live:
+        <div className="fixed inset-0 z-50 bg-midnight/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl relative space-y-5 border border-beige/40 my-8 text-midnight font-sans">
+            <button onClick={() => setShowApproveLeadModal(null)} className="absolute right-6 top-6 text-midnight/65 hover:text-midnight transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            
+            <h2 className="text-xl font-sans font-bold text-midnight border-b border-beige/25 pb-3">Approve & Register PG Listing</h2>
+            
+            <p className="text-xs text-midnight/60 leading-relaxed font-sans">
+              Approve ambassador submission form for <strong className="font-bold text-midnight">{showApproveLeadModal.hostelName}</strong>. Select the target college and landlord to import it live:
             </p>
 
             <form onSubmit={handleApproveLead} className="space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1">Select Campus / College</label>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-midnight/70 uppercase">Select Target College</label>
                   <select
-                    className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none cursor-pointer"
+                    className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none cursor-pointer font-semibold"
                     value={pgCollegeId}
                     onChange={(e) => setPgCollegeId(e.target.value)}
                   >
@@ -1427,31 +1666,32 @@ export default function AdminPortal() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block font-bold text-gray-700 mb-1">Select Landlord User Link</label>
+                
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-midnight/70 uppercase">Assign Landlord Account</label>
                   <select
-                    className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none cursor-pointer font-semibold"
+                    className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none cursor-pointer font-semibold"
                     value={pgOwnerId}
                     onChange={(e) => setPgOwnerId(e.target.value)}
                   >
-                    <option value="CREATE_NEW">🆕 Register New Account ({showApproveLeadModal.ownerName})</option>
+                    <option value="CREATE_NEW">🆕 Register New ({showApproveLeadModal.ownerName})</option>
                     {owners.map((o) => (
                       <option key={o.id} value={o.id}>{o.name} ({o.phone})</option>
                     ))}
                   </select>
-                  <span className="text-[9px] text-gray-400 mt-1 block leading-normal">
-                    If registering new, default login password will be <strong className="text-indigo-600 font-bold font-mono">password123</strong>
+                  <span className="text-[9px] text-midnight/55 mt-1 block">
+                    If registering new landlord, default password will be <strong className="font-mono text-midnight font-bold">password123</strong>
                   </span>
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">Gate Proximity Distance (KM)</label>
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-midnight/70 uppercase">Gate Proximity Distance (KM)</label>
                 <input
                   type="number"
                   step="0.1"
                   required
-                  className="w-full border bg-gray-50 p-2.5 rounded text-gray-900 focus:outline-none"
+                  className="w-full bg-beige/10 border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight font-semibold"
                   value={pgDistance}
                   onChange={(e) => setPgDistance(e.target.value)}
                 />
@@ -1460,9 +1700,9 @@ export default function AdminPortal() {
               <button
                 type="submit"
                 disabled={submitLoading}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-extrabold py-3 rounded shadow cursor-pointer text-center text-xs mt-2"
+                className="w-full bg-midnight hover:bg-midnight-light text-pearl font-bold py-4 rounded-xl text-xs mt-4 transition-colors cursor-pointer text-center uppercase tracking-wider"
               >
-                {submitLoading ? "Publishing Listing..." : "Confirm & Import live PG"}
+                {submitLoading ? "Publishing Listing..." : "Confirm & Import PG Live"}
               </button>
             </form>
           </div>

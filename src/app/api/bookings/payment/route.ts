@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     const updated = await db.booking.update({
       where: { id: bookingId },
       data: {
-        status: "Pending",
+        status: "Payment_Submitted",
         utr: transactionId,
       },
     });

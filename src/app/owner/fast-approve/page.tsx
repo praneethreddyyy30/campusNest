@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { Loader2, Check, X, ShieldAlert, Phone, Calendar, User, DollarSign, FileText } from "lucide-react";
 
 interface BookingDetail {
   id: string;
@@ -88,22 +89,23 @@ function FastApproveContent() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 space-y-3">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-        <p className="text-gray-500 text-sm font-medium">Retrieving booking parameters...</p>
+      <div className="flex flex-col items-center justify-center py-32 space-y-4 bg-pearl min-h-screen">
+        <Loader2 className="animate-spin w-8 h-8 text-midnight/60" />
+        <p className="text-xs text-midnight/60 font-semibold tracking-wide">Retrieving booking parameters...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-md mx-auto py-12 px-4 text-center space-y-4">
-        <div className="bg-red-50 text-red-800 p-4 rounded-xl border border-red-200 text-sm font-semibold">
-          {error}
+      <div className="max-w-md mx-auto py-24 px-4 text-center space-y-6 bg-pearl">
+        <ShieldAlert className="w-12 h-12 text-midnight/35 mx-auto" />
+        <div className="space-y-1">
+          <h2 className="text-xl font-sans font-bold text-midnight">Invalid Request</h2>
+          <p className="text-xs text-midnight/60 leading-relaxed">
+            {error || "Make sure you opened the complete link shared on your WhatsApp account."}
+          </p>
         </div>
-        <p className="text-xs text-gray-400">
-          Make sure you opened the complete link shared on your WhatsApp account.
-        </p>
       </div>
     );
   }
@@ -115,97 +117,100 @@ function FastApproveContent() {
   const isRejected = booking.status === "Rejected";
 
   return (
-    <div className="max-w-md mx-auto px-4 py-8 space-y-6 text-gray-900">
-      <div className="bg-white border rounded-2xl p-6 shadow-xl space-y-6 relative overflow-hidden">
+    <div className="max-w-md mx-auto px-4 py-16 space-y-6 text-midnight bg-pearl font-sans">
+      <div className="bg-white border border-beige/40 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6 relative overflow-hidden">
+        
         {/* Top Header Card */}
-        <div className="border-b pb-4 text-center space-y-1">
-          <span className="text-[10px] bg-indigo-100 text-indigo-800 font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">
-            WhatsApp Approval Portal
+        <div className="border-b border-beige/25 pb-4 text-center space-y-2">
+          <span className="text-[9px] bg-beige/35 text-midnight/80 border border-beige/30 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+            WhatsApp Fast Action Portal
           </span>
-          <h2 className="text-lg font-black text-gray-900 mt-2">{booking.pgName}</h2>
-          <p className="text-xs text-gray-500">{booking.sharingType} Sharing Accommodation</p>
+          <h2 className="text-xl font-sans font-bold text-midnight mt-2">{booking.pgName}</h2>
+          <p className="text-xs text-midnight/60">{booking.sharingType} Sharing Accommodation</p>
         </div>
 
         {/* Success Banner */}
         {successMsg && (
-          <div className="bg-green-50 border border-green-200 text-green-800 text-xs font-bold p-3 rounded-lg text-center animate-bounce">
+          <div className="bg-cream/40 border border-beige/35 text-midnight text-xs font-bold p-3.5 rounded-xl text-center">
             {successMsg}
           </div>
         )}
 
         {/* Booking Info Fields */}
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3 text-xs bg-gray-50 p-4 rounded-xl border">
+          <div className="grid grid-cols-2 gap-4 text-xs bg-beige/5 p-4 rounded-xl border border-beige/35 leading-relaxed">
             <div>
-              <span className="text-gray-400 font-medium">Guest Student:</span>
-              <p className="font-extrabold text-gray-800 text-sm">{booking.studentName}</p>
+              <span className="text-midnight/50 block text-[9px] font-bold uppercase tracking-wider">Guest Student</span>
+              <p className="font-bold text-midnight text-sm mt-0.5">{booking.studentName}</p>
             </div>
             <div>
-              <span className="text-gray-400 font-medium">Student Contact:</span>
-              <p className="font-bold text-gray-700">{booking.studentPhone}</p>
+              <span className="text-midnight/50 block text-[9px] font-bold uppercase tracking-wider">Contact Number</span>
+              <p className="font-bold text-midnight mt-0.5">{booking.studentPhone}</p>
             </div>
-            <div className="border-t pt-2 mt-1">
-              <span className="text-gray-400 font-medium">Check-in Date:</span>
-              <p className="font-bold text-gray-700">{new Date(booking.checkInDate).toLocaleDateString()}</p>
+            <div className="border-t border-beige/20 pt-2 mt-1">
+              <span className="text-midnight/50 block text-[9px] font-bold uppercase tracking-wider">Check-in Date</span>
+              <p className="font-bold text-midnight mt-0.5">{new Date(booking.checkInDate).toLocaleDateString()}</p>
             </div>
-            <div className="border-t pt-2 mt-1">
-              <span className="text-gray-400 font-medium">Advance Paid:</span>
-              <p className="font-black text-green-700">₹{booking.amountPaid}</p>
+            <div className="border-t border-beige/20 pt-2 mt-1">
+              <span className="text-midnight/50 block text-[9px] font-bold uppercase tracking-wider">Escrow Advance</span>
+              <p className="font-bold text-midnight mt-0.5">₹{booking.amountPaid}</p>
             </div>
-            <div className="col-span-2 border-t pt-2 mt-1">
-              <span className="text-gray-400 font-medium">Transaction UTR Reference:</span>
-              <p className="font-mono font-bold text-indigo-600 select-all truncate">{booking.utr}</p>
+            <div className="col-span-2 border-t border-beige/20 pt-2 mt-1">
+              <span className="text-midnight/50 block text-[9px] font-bold uppercase tracking-wider">Reference (UTR)</span>
+              <p className="font-mono font-bold text-midnight mt-0.5 select-all truncate">{booking.utr || "Verified Gateway Card"}</p>
             </div>
           </div>
         </div>
 
-        {/* Stepper Status Badge */}
-        <div className="flex justify-between items-center bg-gray-100/50 p-3 rounded-lg text-xs">
-          <span className="font-semibold text-gray-500">Current Status:</span>
+        {/* Status Badge */}
+        <div className="flex justify-between items-center bg-beige/10 border border-beige/30 p-3.5 rounded-xl text-xs">
+          <span className="font-bold text-midnight/50 uppercase text-[9px] tracking-wider">Current Status:</span>
           <span
-            className={`font-bold px-2 py-0.5 rounded-full border ${
+            className={`font-bold px-2.5 py-0.5 rounded-full border text-[10px] uppercase tracking-wider ${
               isPending
-                ? "bg-amber-50 text-amber-800 border-amber-200 animate-pulse"
+                ? "bg-white text-midnight border-beige/65 animate-pulse"
                 : isApproved
-                ? "bg-green-50 text-green-800 border-green-200"
+                ? "bg-white text-midnight border-beige/65"
                 : "bg-red-50 text-red-800 border-red-200"
             }`}
           >
-            {booking.status === "Pending" ? "Awaiting Decision" : booking.status === "Approved" ? "Confirmed & Booked" : booking.status}
+            {booking.status === "Pending" ? "Awaiting Decision" : booking.status === "Approved" ? "Confirmed" : booking.status}
           </span>
         </div>
 
-        {/* Action triggers */}
+        {/* Actions */}
         <div className="space-y-2 pt-2">
           {isPending ? (
             <div className="grid grid-cols-2 gap-3">
               <button
                 disabled={actionLoading}
                 onClick={() => handleAction("Approved")}
-                className="bg-green-600 hover:bg-green-700 text-white font-extrabold py-3 px-4 rounded-xl shadow-md transition-colors cursor-pointer text-center text-xs disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="bg-midnight hover:bg-midnight-light text-pearl font-bold py-3.5 px-4 rounded-xl shadow-xs transition-colors cursor-pointer text-center text-xs disabled:bg-beige/35 disabled:cursor-not-allowed uppercase tracking-wider flex items-center justify-center gap-1"
               >
-                {actionLoading ? "Processing..." : "✓ Accept Booking"}
+                {actionLoading ? <Loader2 className="animate-spin w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />}
+                <span>Accept</span>
               </button>
               <button
                 disabled={actionLoading}
                 onClick={() => handleAction("Rejected")}
-                className="bg-white border border-red-200 hover:bg-red-50 text-red-600 font-bold py-3 px-4 rounded-xl transition-colors cursor-pointer text-center text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-white border border-beige/45 hover:bg-beige/10 text-midnight font-bold py-3.5 px-4 rounded-xl transition-colors cursor-pointer text-center text-xs disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider flex items-center justify-center gap-1"
               >
-                ✕ Reject Booking
+                <X className="w-3.5 h-3.5" />
+                <span>Reject</span>
               </button>
             </div>
           ) : (
-            <div className="text-center bg-gray-50 p-4 rounded-xl border border-dashed">
-              <p className="text-xs text-gray-500 font-medium">
+            <div className="text-center bg-beige/10 p-4 rounded-xl border border-dashed border-beige/40">
+              <p className="text-xs text-midnight/60 font-medium">
                 {isApproved 
-                  ? "This reservation has already been Approved. The bed is allocated and the student will check in soon."
-                  : "This reservation has been Rejected."}
+                  ? "This reservation has already been approved. The bed is allocated and the student guest is confirmed."
+                  : "This reservation request has been rejected."}
               </p>
             </div>
           )}
         </div>
       </div>
-      <p className="text-center text-[10px] text-gray-400">
+      <p className="text-center text-[10px] text-midnight/40 leading-relaxed font-sans">
         CampusNest Operations • Secure Escrow Platform Link
       </p>
     </div>
@@ -214,13 +219,15 @@ function FastApproveContent() {
 
 export default function FastApprovePage() {
   return (
-    <Suspense fallback={
-      <div className="flex flex-col items-center justify-center py-20 space-y-3">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-        <p className="text-gray-500 text-sm font-medium">Initializing fast-approve portal...</p>
-      </div>
-    }>
-      <FastApproveContent />
-    </Suspense>
+    <div className="min-h-screen bg-pearl py-6">
+      <Suspense fallback={
+        <div className="flex flex-col items-center justify-center py-32 space-y-4 bg-pearl">
+          <Loader2 className="animate-spin w-8 h-8 text-midnight/60" />
+          <p className="text-xs text-midnight/60 font-semibold tracking-wide">Initializing fast-approve portal...</p>
+        </div>
+      }>
+        <FastApproveContent />
+      </Suspense>
+    </div>
   );
 }
