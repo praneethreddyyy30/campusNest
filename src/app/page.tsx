@@ -945,53 +945,57 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 8. Popular Searches Section */}
-      <section className="max-w-6xl mx-auto pb-12 px-4 sm:px-6 lg:px-8 w-full text-center space-y-6">
-        <h3 className="text-xs font-bold text-midnight/50 uppercase tracking-widest">Popular Searches</h3>
-        <div className="flex flex-wrap items-center justify-center gap-3 max-w-2xl mx-auto">
-          
-          <button 
-            onClick={() => handleQuickSearch("RGMCET")}
-            type="button"
-            className="text-xs bg-beige/35 hover:bg-beige/65 text-midnight border border-beige/40 px-4 py-2 rounded-full transition-colors cursor-pointer font-semibold"
-          >
-            PG near RGMCET
-          </button>
-          
-          <button 
-            onClick={() => handleQuickSearch("GPREC")}
-            type="button"
-            className="text-xs bg-beige/35 hover:bg-beige/65 text-midnight border border-beige/40 px-4 py-2 rounded-full transition-colors cursor-pointer font-semibold"
-          >
-            Girls PG near GPREC
-          </button>
-
-          <button 
-            onClick={() => handleQuickSearch("GPREC")}
-            type="button"
-            className="text-xs bg-beige/35 hover:bg-beige/65 text-midnight border border-beige/40 px-4 py-2 rounded-full transition-colors cursor-pointer font-semibold"
-          >
-            Boys PG in Kurnool
-          </button>
-
-          <span 
-            className="text-xs bg-beige/35 text-midnight border border-beige/40 px-4 py-2 rounded-full font-semibold opacity-85 select-none"
-          >
-            PG with Food
+      {/* 8. Founders Section */}
+      <section className="max-w-6xl mx-auto pb-20 px-4 sm:px-6 lg:px-8 w-full text-center space-y-12">
+        <div className="space-y-4">
+          <span className="text-[10px] font-extrabold uppercase tracking-widest bg-sage/10 text-sage py-1.5 px-4 rounded-full">
+            Our Team
           </span>
+          <h2 className="text-3xl font-sans font-extrabold text-midnight tracking-tight">
+            Meet Our Founders
+          </h2>
+          <p className="text-xs sm:text-sm text-midnight/60 max-w-lg mx-auto leading-relaxed">
+            The passionate team behind CampusNest, dedicated to simplifying student housing and reservation experiences.
+          </p>
+        </div>
 
-          <span 
-            className="text-xs bg-beige/35 text-midnight border border-beige/40 px-4 py-2 rounded-full font-semibold opacity-85 select-none"
-          >
-            PG with AC
-          </span>
-
-          <span 
-            className="text-xs bg-beige/35 text-midnight border border-beige/40 px-4 py-2 rounded-full font-semibold opacity-85 select-none"
-          >
-            PG under ₹7000
-          </span>
-
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          {[
+            {
+              name: "Suram Praneeth Reddy",
+              role: "Founder & CEO",
+              avatarBg: "bg-rust/10 text-rust",
+              desc: "Leads the vision, business development, and overall strategic direction of the platform."
+            },
+            {
+              name: "Pranay",
+              role: "Co-Founder & CTO",
+              avatarBg: "bg-sage/10 text-sage",
+              desc: "Oversees the product engineering, software architecture, and system security."
+            },
+            {
+              name: "Rais",
+              role: "Co-Founder & COO",
+              avatarBg: "bg-gold/15 text-gold",
+              desc: "Manages day-to-day operations, vendor onboarding, and customer support workflows."
+            }
+          ].map((founder, idx) => (
+            <div 
+              key={idx} 
+              className="bg-white border border-beige/40 rounded-3xl p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col items-center text-center space-y-4"
+            >
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold ${founder.avatarBg}`}>
+                {founder.name.split(" ").map(n => n[0]).join("")}
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-midnight">{founder.name}</h3>
+                <p className="text-[11px] font-semibold text-midnight/50 mt-0.5">{founder.role}</p>
+              </div>
+              <p className="text-xs text-midnight/65 leading-relaxed font-sans">
+                {founder.desc}
+              </p>
+            </div>
+          ))}
         </div>
       </section>
 
