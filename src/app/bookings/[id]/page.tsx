@@ -153,12 +153,16 @@ function BookingTrackingContent({ id }: { id: string }) {
   const isRejected = status === "Rejected";
   const isNoShow = status === "No-Show";
 
-  const whatsappUrl = `https://wa.me/919391333699?text=${encodeURIComponent(
-    `Hi Support, I am checking status of my booking Ref: CN-${id.slice(
-      0,
-      8
-    ).toUpperCase()} for student ${studentName}.`
-  )}`;
+  const whatsappUrl = isPaymentSubmitted
+    ? `https://wa.me/919391333699?text=${encodeURIComponent(
+        `Hi Support, I have paid the escrow deposit and submitted UTR ${utr || ""}. Ref: CN-${id.slice(0, 8).toUpperCase()}. Please verify my payment by clicking this link: ${origin}/admin/fast-verify?bookingId=${id}&token=CAMPUSNEST_SMS_SECRET_2026`
+      )}`
+    : `https://wa.me/919391333699?text=${encodeURIComponent(
+        `Hi Support, I am checking status of my booking Ref: CN-${id.slice(
+          0,
+          8
+        ).toUpperCase()} for student ${studentName}.`
+      )}`;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-12 space-y-8 bg-pearl font-sans">
