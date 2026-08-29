@@ -168,7 +168,7 @@ function SearchContent() {
 
   if (!collegeId) {
     return (
-      <div className="max-w-xl mx-auto pt-36 md:pt-44 pb-24 px-4 text-center space-y-6">
+      <div className="max-w-xl mx-auto min-h-[80vh] flex flex-col justify-center items-center px-4 text-center space-y-6 pt-16">
         <div className="space-y-2">
           <h2 className="text-2xl font-sans font-bold text-midnight">
             {resolveError || "Find PG Accommodations"}
