@@ -169,17 +169,14 @@ function SearchContent() {
   if (!collegeId) {
     return (
       <div className="max-w-xl mx-auto py-24 px-4 text-center space-y-6">
-        <div className="w-16 h-16 rounded-full bg-beige/30 flex items-center justify-center mx-auto text-midnight">
-          <ShieldAlert className="w-8 h-8" />
-        </div>
         <div className="space-y-2">
           <h2 className="text-2xl font-sans font-bold text-midnight">
-            {resolveError || "No College Selected"}
+            {resolveError || "Find PG Accommodations"}
           </h2>
-          <p className="text-xs sm:text-sm text-midnight/60 leading-relaxed max-w-sm mx-auto">
+          <p className="text-xs sm:text-sm text-midnight/60 leading-relaxed max-w-sm mx-auto font-sans">
             {resolveError
               ? "We couldn't resolve the college location. Please review your query and search again."
-              : "To view local PG outskirts listings, please search for your college below."}
+              : "Enter your college name below to discover verified PGs and hostels nearby."}
           </p>
         </div>
 
