@@ -3,17 +3,36 @@ import { db } from "@/lib/db";
 
 export async function POST(request: Request) {
   try {
-    const headerToken = request.headers.get("x-webhook-token");
+    const { searchParams } = new URL(request.url);
+    const queryToken = searchParams.get("token") || "";
+    const headerToken = request.headers.get("x-webhook-token") || "";
     const expectedToken = process.env.SMS_WEBHOOK_SECRET || "CAMPUSNEST_SMS_SECRET_2026";
 
     // Security Token check to prevent unauthorized spoofing
-    if (headerToken !== expectedToken) {
+    if (headerToken !== expectedToken && queryToken !== expectedToken) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
-    // Support common SMS forwarder payloads (message, text, body)
-    const smsText: string = body.message || body.text || body.body || "";
+    let smsText = "";
+    const contentType = request.headers.get("content-type") || "";
+
+    try {
+      if (contentType.includes("application/json")) {
+        const body = await request.json();
+        smsText = body.message || body.text || body.body || body.content || "";
+      } else if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data")) {
+        const formData = await request.formData();
+        smsText = (formData.get("message") as string) || (formData.get("text") as string) || (formData.get("body") as string) || (formData.get("content") as string) || "";
+      } else {
+        smsText = await request.text();
+      }
+    } catch (parseErr) {
+      try {
+        smsText = await request.text();
+      } catch (e) {
+        smsText = "";
+      }
+    }
 
     if (!smsText) {
       return NextResponse.json({ error: "Empty SMS message text" }, { status: 400 });
