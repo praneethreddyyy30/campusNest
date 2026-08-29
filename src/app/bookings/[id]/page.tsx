@@ -187,7 +187,7 @@ function BookingTrackingContent({ id }: { id: string }) {
             </span>
           )}
           {isPaymentSubmitted && (
-            <span className="bg-yellow-50 text-yellow-800 border border-yellow-250 text-xs font-bold px-3.5 py-1.5 rounded-full animate-pulse uppercase tracking-wider">
+            <span className="bg-gold/[0.08] text-gold border border-gold/25 text-xs font-bold px-3.5 py-1.5 rounded-full animate-pulse uppercase tracking-wider">
               Awaiting Verification
             </span>
           )}
@@ -197,8 +197,8 @@ function BookingTrackingContent({ id }: { id: string }) {
             </span>
           )}
           {isApproved && (
-            <span className="bg-white text-midnight border border-beige/40 text-xs font-bold px-3.5 py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
-              <Check className="w-3.5 h-3.5 text-midnight" />
+            <span className="bg-sage/10 text-sage border border-sage/20 text-xs font-bold px-3.5 py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
+              <Check className="w-3.5 h-3.5 text-sage" />
               <span>Confirmed</span>
             </span>
           )}

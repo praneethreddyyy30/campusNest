@@ -400,8 +400,8 @@ function SearchContent() {
                         className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                       />
                       {pg.isVerified && (
-                        <span className="absolute top-3 left-3 bg-emerald-600/90 backdrop-blur-xs text-white text-[8px] font-bold uppercase px-2.5 py-1 rounded-full tracking-wider flex items-center gap-1 shadow-sm">
-                          <Check className="w-2.5 h-2.5 text-white stroke-[3px]" />
+                        <span className="absolute top-3 left-3 bg-sage/10 text-sage border border-sage/20 backdrop-blur-xs text-[8px] font-bold uppercase px-2.5 py-1 rounded-full tracking-wider flex items-center gap-1 shadow-sm">
+                          <Check className="w-2.5 h-2.5 text-sage stroke-[3px]" />
                           <span>Verified PG</span>
                         </span>
                       )}
@@ -414,8 +414,8 @@ function SearchContent() {
                           <h3 className="font-bold text-base text-midnight leading-tight">
                             {pg.name}
                           </h3>
-                          <div className="flex items-center gap-1.5 text-[10px] text-emerald-800 font-bold bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-xl w-fit">
-                            <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                          <div className="flex items-center gap-1.5 text-[10px] text-sage font-bold bg-sage/5 border border-sage/15 px-2.5 py-1 rounded-xl w-fit">
+                            <MapPin className="w-3.5 h-3.5 text-sage" />
                             <span>{pg.distanceKm} km from college gate</span>
                           </div>
                         </div>
@@ -426,14 +426,24 @@ function SearchContent() {
 
                         {/* Amenities */}
                         <div className="flex flex-wrap gap-1.5 pt-2">
-                          {pg.amenities.split(",").map((amenity, idx) => (
-                            <span
-                              key={idx}
-                              className="text-[9px] font-bold bg-beige/15 border border-beige/30 text-midnight/70 px-2 py-0.5 rounded"
-                            >
-                              {amenity.trim()}
-                            </span>
-                          ))}
+                          {pg.amenities.split(",").map((amenity, idx) => {
+                            const trimText = amenity.trim();
+                            const lower = trimText.toLowerCase();
+                            let badgeClass = "bg-sage/5 text-sage border border-sage/15";
+                            if (lower.includes("wifi") || lower.includes("internet")) badgeClass = "bg-indigo-50/50 text-indigo-700 border border-indigo-100/50";
+                            else if (lower.includes("ac") || lower.includes("cooler")) badgeClass = "bg-teal-50/50 text-teal-700 border border-teal-100/50";
+                            else if (lower.includes("meals") || lower.includes("food") || lower.includes("mess")) badgeClass = "bg-rust/5 text-rust border border-rust/15";
+                            else if (lower.includes("gym") || lower.includes("fitness")) badgeClass = "bg-rose-50/50 text-rose-700 border border-rose-100/50";
+
+                            return (
+                              <span
+                                key={idx}
+                                className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${badgeClass}`}
+                              >
+                                {trimText}
+                              </span>
+                            );
+                          })}
                         </div>
                       </div>
 
@@ -441,7 +451,7 @@ function SearchContent() {
                       <div className="flex items-center justify-between border-t border-beige/20 pt-4">
                         <div>
                           <span className="text-[9px] text-midnight/55 uppercase font-bold tracking-wider block">Starts from</span>
-                          <p className="text-lg font-extrabold text-midnight">
+                          <p className="text-lg font-extrabold text-rust">
                             ₹{startingPrice}
                             <span className="text-xs text-midnight/50 font-normal"> / month</span>
                           </p>

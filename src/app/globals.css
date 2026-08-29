@@ -9,6 +9,10 @@
   --ivory: #FDF9F0;
   --cream: #FAF3E0;
   --beige: #F5EBE0;
+  --rust: #B85042;
+  --sage: #3E6953;
+  --gold: #D9A05B;
+  --sand-dark: #E6CCB2;
 }
 
 @theme inline {
@@ -20,6 +24,10 @@
   --color-ivory: var(--ivory);
   --color-cream: var(--cream);
   --color-beige: var(--beige);
+  --color-rust: var(--rust);
+  --color-sage: var(--sage);
+  --color-gold: var(--gold);
+  --color-sand-dark: var(--sand-dark);
   --font-sans: var(--font-plus-jakarta-sans), sans-serif;
   --font-display: var(--font-allura), cursive;
   --font-accent: var(--font-allura), cursive;
@@ -91,6 +99,21 @@ body {
 
 .animation-delay-450 {
   animation-delay: 450ms;
+}
+
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-fade {
+  animation: pageFadeIn 0.4s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
 }
 
 

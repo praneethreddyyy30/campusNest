@@ -160,7 +160,7 @@ function CheckoutContent() {
               </>
             ) : (
               <>
-                <CheckCircle2 className="w-16 h-16 text-midnight animate-bounce" />
+                <CheckCircle2 className="w-16 h-16 text-sage animate-bounce" />
                 <h3 className="text-xl font-sans font-bold text-midnight">Payment Successful</h3>
                 <p className="text-xs text-midnight/60">
                   Allocating your bed in {booking.room.pg.name}. Redirecting back to dashboard...
@@ -283,7 +283,7 @@ function CheckoutContent() {
                       onChange={(e) => setUtrInput(e.target.value.replace(/\D/g, ""))}
                       className="w-full bg-white border border-beige/40 rounded-xl p-3 text-xs text-midnight focus:outline-none focus:ring-1 focus:ring-midnight font-bold tracking-widest font-mono text-center placeholder:tracking-normal placeholder:font-sans"
                     />
-                    <p className="text-[9px] text-midnight/50 leading-relaxed mt-1">
+                    <p className="text-[9px] text-rust font-medium leading-relaxed mt-1.5">
                       ⚠️ <strong>Crucial:</strong> Enter the exact 12-digit Ref / UTR number from your successful payment receipt. The landlord will check their bank statement matching this UTR before approving your bed check-in. Entering a fake code will result in immediate booking cancellation.
                     </p>
                   </div>

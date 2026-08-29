@@ -18,7 +18,9 @@ import {
   ShieldAlert,
   ArrowRight,
   Check,
-  Calendar
+  Calendar,
+  Sparkles,
+  Coins
 } from "lucide-react";
 
 function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: string }) {
@@ -233,7 +235,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen bg-pearl">
       
       {/* 1. Hero Section */}
-      <section className="relative min-h-[92vh] flex items-start justify-center px-4 hero-section-pad overflow-hidden">
+      <section className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-24 pb-16 md:pt-28 md:pb-20 overflow-hidden">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 overflow-hidden">
           <div 
@@ -384,9 +386,9 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
           {/* Card 1 */}
-          <div className="group bg-white rounded-2xl p-8 border border-midnight/[0.06] border-t-4 border-t-midnight/70 shadow-[0_8px_30px_rgba(16,46,74,0.04)] hover:shadow-[0_20px_40px_rgba(16,46,74,0.08)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer">
-            <div className="w-12 h-12 rounded-xl bg-midnight/[0.04] flex items-center justify-center mb-6 group-hover:bg-midnight group-hover:scale-110 transition-all duration-300">
-              <Compass className="w-5 h-5 text-midnight group-hover:text-pearl transition-colors duration-300" />
+          <div className="group bg-white rounded-2xl p-8 border border-midnight/[0.06] border-t-4 border-t-rust/70 shadow-[0_8px_30px_rgba(16,46,74,0.04)] hover:shadow-[0_20px_40px_rgba(16,46,74,0.08)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer">
+            <div className="w-12 h-12 rounded-xl bg-rust/[0.04] flex items-center justify-center mb-6 group-hover:bg-rust group-hover:scale-110 transition-all duration-300">
+              <Compass className="w-5 h-5 text-rust group-hover:text-pearl transition-colors duration-300" />
             </div>
             <h3 className="text-[18px] font-sans font-bold text-midnight mb-3">Proximity-Sorted</h3>
             <p className="text-sm text-midnight/70 font-sans leading-relaxed">
@@ -395,9 +397,9 @@ export default function Home() {
           </div>
 
           {/* Card 2 */}
-          <div className="group bg-white rounded-2xl p-8 border border-midnight/[0.06] border-t-4 border-t-midnight/70 shadow-[0_8px_30px_rgba(16,46,74,0.04)] hover:shadow-[0_20px_40px_rgba(16,46,74,0.08)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer">
-            <div className="w-12 h-12 rounded-xl bg-midnight/[0.04] flex items-center justify-center mb-6 group-hover:bg-midnight group-hover:scale-110 transition-all duration-300">
-              <ShieldCheck className="w-5 h-5 text-midnight group-hover:text-pearl transition-colors duration-300" />
+          <div className="group bg-white rounded-2xl p-8 border border-midnight/[0.06] border-t-4 border-t-sage/70 shadow-[0_8px_30px_rgba(16,46,74,0.04)] hover:shadow-[0_20px_40px_rgba(16,46,74,0.08)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer">
+            <div className="w-12 h-12 rounded-xl bg-sage/[0.04] flex items-center justify-center mb-6 group-hover:bg-sage group-hover:scale-110 transition-all duration-300">
+              <ShieldCheck className="w-5 h-5 text-sage group-hover:text-pearl transition-colors duration-300" />
             </div>
             <h3 className="text-[18px] font-sans font-bold text-midnight mb-3">Escrow Security</h3>
             <p className="text-sm text-midnight/70 font-sans leading-relaxed">
@@ -406,9 +408,9 @@ export default function Home() {
           </div>
 
           {/* Card 3 */}
-          <div className="group bg-white rounded-2xl p-8 border border-midnight/[0.06] border-t-4 border-t-midnight/70 shadow-[0_8px_30px_rgba(16,46,74,0.04)] hover:shadow-[0_20px_40px_rgba(16,46,74,0.08)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer">
-            <div className="w-12 h-12 rounded-xl bg-midnight/[0.04] flex items-center justify-center mb-6 group-hover:bg-midnight group-hover:scale-110 transition-all duration-300">
-              <MessageSquare className="w-5 h-5 text-midnight group-hover:text-pearl transition-colors duration-300" />
+          <div className="group bg-white rounded-2xl p-8 border border-midnight/[0.06] border-t-4 border-t-gold/70 shadow-[0_8px_30px_rgba(16,46,74,0.04)] hover:shadow-[0_20px_40px_rgba(16,46,74,0.08)] hover:-translate-y-1.5 transition-all duration-300 cursor-pointer">
+            <div className="w-12 h-12 rounded-xl bg-gold/[0.04] flex items-center justify-center mb-6 group-hover:bg-gold group-hover:scale-110 transition-all duration-300">
+              <MessageSquare className="w-5 h-5 text-gold group-hover:text-pearl transition-colors duration-300" />
             </div>
             <h3 className="text-[18px] font-sans font-bold text-midnight mb-3">Admin-Moderated Q&As</h3>
             <p className="text-sm text-midnight/70 font-sans leading-relaxed">
@@ -439,30 +441,34 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Dynamic Showcase Tabs (Popin-Inspired) */}
-        <div className="flex flex-wrap gap-2 justify-start pb-4 animate-fade-in-up">
+        {/* Dynamic Showcase Tabs (Glassmorphic Segment Control) */}
+        <div className="inline-flex flex-wrap p-1.5 bg-beige/35 backdrop-blur-xs border border-beige/45 rounded-2xl shadow-xs gap-1.5 animate-fade-in-up">
           {[
-            { id: "all", label: "🌟 All Listings", count: featuredPgs.length },
-            { id: "near", label: "⚡ Outskirts (≤ 1.0 KM)", count: featuredPgs.filter(pg => pg.distanceKm <= 1.0).length },
-            { id: "budget", label: "💰 Budget (≤ ₹5000/mo)", count: featuredPgs.filter(pg => pg.rooms.some(r => r.priceMonthly <= 5000)).length }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setExploreTab(tab.id as any)}
-              className={`px-5 py-3 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-xs border ${
-                exploreTab === tab.id
-                  ? "bg-midnight text-pearl border-midnight scale-105"
-                  : "bg-white text-midnight border-beige hover:border-midnight/40 hover:-translate-y-0.5"
-              }`}
-            >
-              <span>{tab.label}</span>
-              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-extrabold ${
-                exploreTab === tab.id ? "bg-white/20 text-white" : "bg-midnight/10 text-midnight/70"
-              }`}>
-                {tab.count}
-              </span>
-            </button>
-          ))}
+            { id: "all", label: "All Listings", icon: Sparkles, count: featuredPgs.length },
+            { id: "near", label: "Outskirts (≤ 1.0 KM)", icon: MapPin, count: featuredPgs.filter(pg => pg.distanceKm <= 1.0).length },
+            { id: "budget", label: "Budget (≤ ₹5000/mo)", icon: Coins, count: featuredPgs.filter(pg => pg.rooms.some(r => r.priceMonthly <= 5000)).length }
+          ].map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setExploreTab(tab.id as any)}
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-2 cursor-pointer ${
+                  exploreTab === tab.id
+                    ? "bg-midnight text-pearl shadow-md translate-y-0"
+                    : "text-midnight hover:bg-white/50 border border-transparent"
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{tab.label}</span>
+                <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-extrabold ${
+                  exploreTab === tab.id ? "bg-white/20 text-white" : "bg-midnight/10 text-midnight/70"
+                }`}>
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {loadingPgs ? (
@@ -504,7 +510,7 @@ export default function Home() {
                       className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                     />
                     {pg.isVerified && (
-                      <span className="absolute top-4 left-4 bg-emerald-600/90 backdrop-blur-sm text-white text-[8px] font-bold uppercase px-2.5 py-1 rounded-full tracking-wider flex items-center gap-1 shadow-sm">
+                      <span className="absolute top-4 left-4 bg-sage/95 backdrop-blur-sm text-white text-[8px] font-bold uppercase px-2.5 py-1 rounded-full tracking-wider flex items-center gap-1 shadow-sm">
                         <Check className="w-2.5 h-2.5 text-white stroke-[3px]" />
                         <span>Verified PG</span>
                       </span>
@@ -519,7 +525,7 @@ export default function Home() {
                       <div className="flex items-center justify-between">
                         <h3 className="text-base font-bold text-midnight line-clamp-1">{pg.name}</h3>
                         <div className="flex items-center gap-1 text-xs font-semibold text-midnight/80">
-                          <Star className="w-3.5 h-3.5 fill-midnight text-midnight" />
+                          <Star className="w-3.5 h-3.5 fill-gold text-gold" />
                           <span>4.6</span>
                         </div>
                       </div>
@@ -530,21 +536,31 @@ export default function Home() {
 
                       {/* Amenities */}
                       <div className="flex flex-wrap gap-1 pt-2">
-                        {pg.amenities.split(",").slice(0, 3).map((amenity, idx) => (
-                          <span 
-                            key={idx} 
-                            className="text-[10px] font-semibold bg-beige/25 text-midnight/80 px-2 py-0.5 rounded"
-                          >
-                            {amenity.trim()}
-                          </span>
-                        ))}
+                        {pg.amenities.split(",").slice(0, 3).map((amenity, idx) => {
+                          const trimText = amenity.trim();
+                          const lower = trimText.toLowerCase();
+                          let badgeClass = "bg-sage/5 text-sage border border-sage/15";
+                          if (lower.includes("wifi") || lower.includes("internet")) badgeClass = "bg-indigo-50/50 text-indigo-700 border border-indigo-100/50";
+                          else if (lower.includes("ac") || lower.includes("cooler")) badgeClass = "bg-teal-50/50 text-teal-700 border border-teal-100/50";
+                          else if (lower.includes("meals") || lower.includes("food") || lower.includes("mess")) badgeClass = "bg-rust/5 text-rust border border-rust/15";
+                          else if (lower.includes("gym") || lower.includes("fitness")) badgeClass = "bg-rose-50/50 text-rose-700 border border-rose-100/50";
+
+                          return (
+                            <span 
+                              key={idx} 
+                              className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${badgeClass}`}
+                            >
+                              {trimText}
+                            </span>
+                          );
+                        })}
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between border-t border-beige/20 pt-4">
                       <div>
                         <span className="text-[10px] text-midnight/55 uppercase font-bold tracking-wider">Starts from</span>
-                        <p className="text-base font-bold text-midnight">
+                        <p className="text-base font-bold text-rust">
                           ₹{startPrice}
                           <span className="text-xs text-midnight/55 font-normal">/mo</span>
                         </p>

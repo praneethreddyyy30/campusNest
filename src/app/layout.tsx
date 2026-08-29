@@ -59,7 +59,7 @@ export default function RootLayout({
                   <img 
                     src="/logo.png" 
                     alt="CampusNest Logo" 
-                    className="w-9 h-9 object-contain brightness-0 invert" 
+                    className="w-11 h-11 object-contain brightness-0 invert" 
                   />
                   <span className="text-xl font-sans font-bold tracking-tight text-pearl">
                     CampusNest

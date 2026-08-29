@@ -369,8 +369,8 @@ export default function PGDetails({
                         onClick={() => setActivePgImageIdx(idx)}
                         className={`relative aspect-[4/3] rounded-lg overflow-hidden border cursor-pointer transition-all ${
                           activePgImageIdx === idx 
-                            ? "border-midnight ring-2 ring-midnight/5" 
-                            : "border-beige/40 hover:border-midnight/40"
+                            ? "border-rust ring-2 ring-rust/5" 
+                            : "border-beige/40 hover:border-rust/40"
                         }`}
                       >
                         <img
@@ -397,20 +397,20 @@ export default function PGDetails({
             <div className="flex items-center gap-2.5 flex-wrap">
               <h1 className="text-3xl font-sans font-bold text-midnight tracking-tight leading-tight">{pg.name}</h1>
               {pg.isVerified && (
-                <span className="bg-white/80 border border-beige/40 text-midnight text-[9px] font-extrabold uppercase px-2.5 py-0.5 rounded-full tracking-wider">
+                <span className="bg-sage/10 border border-sage/20 text-sage text-[9px] font-extrabold uppercase px-2.5 py-0.5 rounded-full tracking-wider font-sans">
                   Verified
                 </span>
               )}
               {avgRating && (
-                <span className="bg-white/80 border border-beige/40 text-midnight text-[9px] font-extrabold uppercase px-2.5 py-0.5 rounded-full tracking-wider flex items-center gap-1">
-                  <Star className="w-2.5 h-2.5 fill-midnight text-midnight" />
+                <span className="bg-gold/[0.06] border border-gold/25 text-gold text-[9px] font-extrabold uppercase px-2.5 py-0.5 rounded-full tracking-wider flex items-center gap-1 font-sans">
+                  <Star className="w-2.5 h-2.5 fill-gold text-gold" />
                   <span>{avgRating} ({pg.reviews.length} {pg.reviews.length === 1 ? "Review" : "Reviews"})</span>
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-1.5 text-xs text-midnight/80 font-bold bg-beige/25 border border-beige/35 px-3 py-1.5 rounded-lg w-fit">
-              <MapPin className="w-3.5 h-3.5 text-midnight/70" />
+            <div className="flex items-center gap-1.5 text-xs text-sage font-bold bg-sage/5 border border-sage/15 px-3 py-1.5 rounded-lg w-fit">
+              <MapPin className="w-3.5 h-3.5 text-sage" />
               <span>
                 {pg.distanceKm} km from {pg.college.name} Gate
               </span>
@@ -424,14 +424,24 @@ export default function PGDetails({
           <div className="space-y-3 border-t border-beige/25 pt-6">
             <h3 className="font-bold text-midnight text-xs uppercase tracking-wider">Amenities Included:</h3>
             <div className="flex flex-wrap gap-2">
-              {pg.amenities.split(",").map((amenity, idx) => (
-                <span
-                  key={idx}
-                  className="bg-beige/20 text-midnight font-semibold text-xs px-3.5 py-1.5 rounded-lg border border-beige/35"
-                >
-                  ✓ {amenity.trim()}
-                </span>
-              ))}
+              {pg.amenities.split(",").map((amenity, idx) => {
+                const trimText = amenity.trim();
+                const lower = trimText.toLowerCase();
+                let badgeClass = "bg-sage/5 text-sage border border-sage/15";
+                if (lower.includes("wifi") || lower.includes("internet")) badgeClass = "bg-indigo-50/50 text-indigo-700 border border-indigo-100/50";
+                else if (lower.includes("ac") || lower.includes("cooler")) badgeClass = "bg-teal-50/50 text-teal-700 border border-teal-100/50";
+                else if (lower.includes("meals") || lower.includes("food") || lower.includes("mess")) badgeClass = "bg-rust/5 text-rust border border-rust/15";
+                else if (lower.includes("gym") || lower.includes("fitness")) badgeClass = "bg-rose-50/50 text-rose-700 border border-rose-100/50";
+
+                return (
+                  <span
+                    key={idx}
+                    className={`font-bold text-xs px-3.5 py-1.5 rounded-lg ${badgeClass}`}
+                  >
+                    ✓ {trimText}
+                  </span>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -482,13 +492,23 @@ export default function PGDetails({
                         <h3 className="font-bold text-midnight text-lg">
                           {room.sharingType} Sharing
                         </h3>
-                        <span className="inline-block text-[10px] font-extrabold uppercase tracking-wide bg-beige/35 text-midnight/80 px-2 py-0.5 rounded-full mt-1 border border-beige/30">
-                          {room.genderPreference} Preference
-                        </span>
+                        {(() => {
+                          const gender = room.genderPreference.toLowerCase();
+                          const badgeClass = gender.includes("girl") 
+                            ? "bg-rose-50/70 text-rose-700 border-rose-200/60" 
+                            : gender.includes("boy") 
+                              ? "bg-blue-50/70 text-blue-700 border-blue-200/60" 
+                              : "bg-beige/35 text-midnight/80 border-beige/30";
+                          return (
+                            <span className={`inline-block text-[10px] font-extrabold uppercase tracking-wide px-2.5 py-0.5 rounded-full mt-1 border ${badgeClass}`}>
+                              {room.genderPreference} Preference
+                            </span>
+                          );
+                        })()}
                       </div>
                       <div className="text-right">
                         <span className="text-[9px] text-midnight/55 uppercase font-bold tracking-wider block">Rent</span>
-                        <p className="text-lg font-bold text-midnight">
+                        <p className="text-lg font-bold text-rust">
                           ₹{room.priceMonthly}
                           <span className="text-xs text-midnight/50 font-normal">/mo</span>
                         </p>
@@ -639,9 +659,9 @@ export default function PGDetails({
                 <div key={r.id} className="pt-4 first:pt-0 space-y-2 text-xs sm:text-sm font-sans">
                   <div className="flex justify-between items-center">
                     <p className="font-bold text-midnight">{r.studentName}</p>
-                    <span className="text-midnight font-semibold text-[10px]">
+                    <span className="text-gold font-bold text-[11px] tracking-wide">
                       {"★".repeat(r.rating)}
-                      {"☆".repeat(5 - r.rating)}
+                      <span className="text-beige/90">{"☆".repeat(5 - r.rating)}</span>
                     </span>
                   </div>
                   <p className="text-midnight/70 leading-relaxed italic">" {r.comment} "</p>
