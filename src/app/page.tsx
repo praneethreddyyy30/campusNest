@@ -132,16 +132,43 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [searchTerm, selectedCollege]);
 
-  // Load featured PGs near the first available college
+  // Load featured PGs near the first available college or last searched college
   useEffect(() => {
     const loadFeatured = async () => {
       setLoadingPgs(true);
       try {
+        let activeCollegeId = "";
+        let activeCollegeName = "";
+
+        const savedCollegeStr = localStorage.getItem("campusnest_last_college");
+        if (savedCollegeStr) {
+          try {
+            const savedCollege = JSON.parse(savedCollegeStr);
+            if (savedCollege.id && savedCollege.name) {
+              activeCollegeId = savedCollege.id;
+              activeCollegeName = savedCollege.name;
+            }
+          } catch (e) {
+            console.error("Failed to parse saved college:", e);
+          }
+        }
+
+        if (activeCollegeId && activeCollegeName) {
+          setFeaturedCollegeName(activeCollegeName);
+          const pgRes = await fetch(`/api/pgs/search?collegeId=${activeCollegeId}`);
+          if (pgRes.ok) {
+            const pgData = await pgRes.json();
+            setFeaturedPgs(pgData.slice(0, 3));
+            setLoadingPgs(false);
+            return;
+          }
+        }
+
+        // Fallback to RGMCET
         const res = await fetch("/api/colleges/search?query=");
         if (res.ok) {
           const list = await res.json();
           if (list.length > 0) {
-            // Find a college that has PGs (usually RGMCET has seeded PGs)
             const rgm = list.find((c: College) => c.name.includes("RGMCET")) || list[0];
             setFeaturedCollegeName(rgm.name);
             const pgRes = await fetch(`/api/pgs/search?collegeId=${rgm.id}`);

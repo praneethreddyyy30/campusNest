@@ -60,6 +60,20 @@ function SearchContent() {
   const [localColleges, setLocalColleges] = useState<any[]>([]);
   const [showLocalSuggestions, setShowLocalSuggestions] = useState(false);
 
+  // Save college memory for the homepage
+  useEffect(() => {
+    if (collegeId && collegeId !== "SEARCH_BY_NAME" && collegeName && collegeName !== "College") {
+      try {
+        localStorage.setItem(
+          "campusnest_last_college",
+          JSON.stringify({ id: collegeId, name: collegeName })
+        );
+      } catch (err) {
+        console.error("Failed to save college preference to localStorage:", err);
+      }
+    }
+  }, [collegeId, collegeName]);
+
   // Resolve typed college queries
   useEffect(() => {
     const resolveCollege = async () => {
