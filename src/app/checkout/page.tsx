@@ -257,7 +257,7 @@ function CheckoutContent() {
                 <div className="flex flex-col sm:flex-row items-center gap-6 justify-center">
                   <img
                     src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                      `upi://pay?pa=93913333699@okaxis&pn=CampusNest&am=${booking.amountPaid}&cu=INR`
+                      `upi://pay?pa=9391333699@ybl&pn=CampusNest&am=${booking.amountPaid}&cu=INR`
                     )}`}
                     alt="UPI Escrow QR Code"
                     className="w-36 h-36 border border-beige/35 p-1 rounded-2xl bg-white shadow-xs"
@@ -265,7 +265,7 @@ function CheckoutContent() {
                   <div className="space-y-2 text-center sm:text-left max-w-xs">
                     <h4 className="font-bold text-xs text-midnight uppercase tracking-wider">UPI Qr Checkout (Escrow Deposit)</h4>
                     <p className="text-[11px] text-midnight/60 leading-relaxed">
-                      Scan this QR code using any UPI App (GPay, PhonePe, Paytm) to deposit the <strong>₹{booking.amountPaid}</strong> escrow token directly to <strong>93913333699@okaxis</strong>.
+                      Scan this QR code using any UPI App (GPay, PhonePe, Paytm) to deposit the <strong>₹{booking.amountPaid}</strong> escrow token directly to <strong>9391333699@ybl</strong>.
                     </p>
                   </div>
                 </div>
@@ -313,28 +313,28 @@ function CheckoutContent() {
                   
                   <div className="grid grid-cols-2 gap-3 max-w-md mx-auto pt-2">
                     <a
-                      href={`phonepe://pay?pa=93913333699@okaxis&pn=CampusNest&am=${booking.amountPaid}&cu=INR`}
+                      href={`phonepe://pay?pa=9391333699@ybl&pn=CampusNest&am=${booking.amountPaid}&cu=INR`}
                       className="flex flex-col items-center justify-center p-3 border border-beige/40 rounded-xl hover:border-midnight/40 hover:bg-white bg-white transition-all shadow-xs"
                     >
                       <Smartphone className="w-5 h-5 text-midnight/80" />
                       <span className="text-[10px] font-bold text-midnight mt-1.5 font-sans">PhonePe</span>
                     </a>
                     <a
-                      href={`gpay://upi/pay?pa=93913333699@okaxis&pn=CampusNest&am=${booking.amountPaid}&cu=INR`}
+                      href={`gpay://upi/pay?pa=9391333699@ybl&pn=CampusNest&am=${booking.amountPaid}&cu=INR`}
                       className="flex flex-col items-center justify-center p-3 border border-beige/40 rounded-xl hover:border-midnight/40 hover:bg-white bg-white transition-all shadow-xs"
                     >
                       <Smartphone className="w-5 h-5 text-midnight/80" />
                       <span className="text-[10px] font-bold text-midnight mt-1.5 font-sans">Google Pay</span>
                     </a>
                     <a
-                      href={`paytmmp://cash_wallet?pa=93913333699@okaxis&pn=CampusNest&am=${booking.amountPaid}&cu=INR`}
+                      href={`paytmmp://cash_wallet?pa=9391333699@ybl&pn=CampusNest&am=${booking.amountPaid}&cu=INR`}
                       className="flex flex-col items-center justify-center p-3 border border-beige/40 rounded-xl hover:border-midnight/40 hover:bg-white bg-white transition-all shadow-xs"
                     >
                       <Smartphone className="w-5 h-5 text-midnight/80" />
                       <span className="text-[10px] font-bold text-midnight mt-1.5 font-sans">Paytm</span>
                     </a>
                     <a
-                      href={`upi://pay?pa=93913333699@okaxis&pn=CampusNest&am=${booking.amountPaid}&cu=INR`}
+                      href={`upi://pay?pa=9391333699@ybl&pn=CampusNest&am=${booking.amountPaid}&cu=INR`}
                       className="flex flex-col items-center justify-center p-3 border border-beige/40 rounded-xl hover:border-midnight/40 hover:bg-white bg-white transition-all shadow-xs"
                     >
                       <Smartphone className="w-5 h-5 text-midnight/80" />
