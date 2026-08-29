@@ -245,7 +245,7 @@ function BookingTrackingContent({ id }: { id: string }) {
           <div className="flex items-center gap-3 relative z-10">
             <div
               className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs ${
-                isApproved || isNoShow
+                isApproved || isNoShow || isPending
                   ? "bg-midnight text-pearl"
                   : isRejected
                   ? "bg-red-700 text-white"
@@ -258,7 +258,7 @@ function BookingTrackingContent({ id }: { id: string }) {
             </div>
             <div>
               <p className="text-xs font-bold text-midnight uppercase tracking-wider">
-                {isApproved
+                {isApproved || isPending
                   ? "Deposit Verified"
                   : isRejected
                   ? "Rejected"
@@ -278,6 +278,8 @@ function BookingTrackingContent({ id }: { id: string }) {
                   ? "bg-midnight text-pearl"
                   : isRejected
                   ? "bg-red-700 text-white"
+                  : isPending
+                  ? "bg-midnight text-pearl animate-pulse"
                   : "bg-beige/30 text-midnight/40 border border-beige/20"
               }`}
             >
